@@ -1,5 +1,7 @@
 import { Container, Row, Col } from 'react-bootstrap';
 
+import '.Navbar.css'
+
 function Navbar(props) {
   return (
       <div style={{position: 'absolute', top: '0', left: '0', width: '100vw'}}>
