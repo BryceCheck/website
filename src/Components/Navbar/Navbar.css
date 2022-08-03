@@ -9,7 +9,7 @@
     text-decoration: none;
     background: 
       linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)),
-      linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 1));
+      linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 1));
     background-size: 100% 0.1em, 0 0.1em;
     background-position: 100% 100%, 0 100%;
     background-repeat: no-repeat;
