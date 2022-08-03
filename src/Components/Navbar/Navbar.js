@@ -2,7 +2,7 @@ import { Container, Row, Col } from 'react-bootstrap';
 
 function NavbarItem(props) {
   return (
-    <Col>
+    <Col sm='4'>
       <a href={props.link} className='navitem' style={{...props.style}}>
         {props.text}
       </a>
@@ -13,7 +13,7 @@ function NavbarItem(props) {
 function Navbar(props) {
   return (
       <div style={{position: 'absolute', top: '0', left: '0', width: '100vw'}}>
-        <Container style={{display: 'flex', justifyContent: 'space-around', maxHeight: '40px', color: 'white', backgroundColor: 'black'}} fluid>
+        <Container style={{maxHeight: '40px', color: 'white', backgroundColor: 'black'}} fluid>
           <Row>
             <NavbarItem link='/' text='Home' style={{}}/>
             <NavbarItem link='/future' text='Future' style={{}}/>
