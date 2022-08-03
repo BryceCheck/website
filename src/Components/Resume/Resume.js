@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
+import { Container, Row, Col } from 'react-bootstrap';
 
 import Navbar from "../Navbar/Navbar";
 
@@ -12,19 +13,19 @@ function Resume(props) {
       <div className="resume">
         <div className="resume-intro">
           <FontAwesomeIcon icon={faGithub}/>
-          <h1>Bryce Check</h1>
-          <FontAwesomeIcon icon={faLinkedinIn}/>
+          Bryce Check
+          <FontAwesomeIcon icon={faLinkedinIn} className="resume-linkedin-icon"/>
         </div>
-        <div className="resume-skill-list">
-          <div className="resume-skill">
-            <div>Languages</div>
-            <div>C/C++, Golang, Javascript, Python, HTML, CSS</div>
-          </div>
-          <div className="resume-skill">
-            <div>Technologies</div>
-            <div>Vitis/Vivado, GDB, Make, Valgrind, React, Bootstrap, Redux, AutoSAR, SLAM, Path Planning, Search Algorithms</div>
-          </div>
-        </div>
+        <Container>
+          <Row style={{flexDirection: 'row'}}>
+            <Col>Languages</Col>
+            <Col>C/C++, Golang, Javascript, Python, HTML, CSS</Col>
+          </Row>
+          <Row>
+            <Col>Technologies</Col>
+            <Col>Vitis/Vivado, GDB, Make, Valgrind, React, Bootstrap, Redux, AutoSAR, SLAM, Path Planning, Search Algorithms</Col>
+          </Row>
+        </Container>
         <ul className="resume-roles">
           <li className="resume-item">
             <div className="resume-item-header">
