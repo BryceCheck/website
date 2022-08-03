@@ -1,3 +1,11 @@
 .resume {
     margin-top: 40px;
 }
+
+.resume-intro {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100vw;
+    height: 30px;
+}
