@@ -15,9 +15,9 @@ function Navbar(props) {
       <div style={{position: 'absolute', top: '0', left: '0', width: '100vw'}}>
         <Container style={{maxHeight: '40px', color: 'white', backgroundColor: 'black'}} fluid>
           <Row>
-            <NavbarItem link='/' text='Home' style={{}}/>
-            <NavbarItem link='/future' text='Future' style={{}}/>
-            <NavbarItem link='/shop' text='Shop' style={{}}/>
+            <Col sm='4' className='nav-col'><a className='nav-link' href='/'>Home</a></Col>
+            <Col sm='4' className='nav-col'><a className='nav-link' href='/future'>Future</a></Col>
+            <Col sm='4' className='nav-col'><a className='nav-link' href='/shop'>Shop</a></Col>
           </Row>
         </Container>
       </div>
