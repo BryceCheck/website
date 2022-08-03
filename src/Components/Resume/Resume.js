@@ -11,9 +11,9 @@ function Resume(props) {
       <Navbar/>
       <div className="resume">
         <div className="resume-intro">
-          <FontAwesomeIcon icon={['fa-brands', 'fa-linked-in']}/>
+          <FontAwesomeIcon icon='fa-brands fa-linked-in'/>
           <h1>Bryce Check</h1>
-          <FontAwesomeIcon icon={['fa-brands', 'fa-github']}/>
+          <FontAwesomeIcon icon='fa-brands fa-github'/>
         </div>
         <div className="resume-skill-list">
           <div className="resume-skill">
