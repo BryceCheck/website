@@ -3,6 +3,8 @@ import { faGithub, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
 
 import Navbar from "../Navbar/Navbar";
 
+import './Resume.css'
+
 function Resume(props) {
   return (
     <>
