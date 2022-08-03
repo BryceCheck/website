@@ -1,9 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGithub, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
 
 import Navbar from "../Navbar/Navbar";
-
-const upIcon = <FontAwesomeIcon icon={['fas', 'circle-chevron-up']}/>;
-const downIcon = <FontAwesomeIcon icon={['fas', 'circle-chevron-down']}/>;
 
 function Resume(props) {
   return (
@@ -11,9 +9,9 @@ function Resume(props) {
       <Navbar/>
       <div className="resume">
         <div className="resume-intro">
-          <FontAwesomeIcon icon={['fa-brands', 'fa-linked-in']}/>
+          <FontAwesomeIcon icon={faGithub}/>
           <h1>Bryce Check</h1>
-          <FontAwesomeIcon icon={['fa-brands', 'fa-github']}/>
+          <FontAwesomeIcon icon={faLinkedinIn}/>
         </div>
         <div className="resume-skill-list">
           <div className="resume-skill">
