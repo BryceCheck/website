@@ -1,6 +1,6 @@
 import { Container, Row, Col } from 'react-bootstrap';
 
-import '.Navbar.css'
+import './Navbar.css'
 
 function Navbar(props) {
   return (
