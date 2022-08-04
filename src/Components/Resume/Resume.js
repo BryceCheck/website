@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
 import { Modal, Container, Row, Col } from 'react-bootstrap';
@@ -15,16 +15,39 @@ import intelLogo from '../../Assets/intel-logo.png';
 import uscLogo from '../../Assets/usc-logo.png';
 import vcLogo from '../../Assets/vc-logo.png';
 
+function getModalDimensions() {
+  const sizeReducer   = 0.7;
+  const hrztlReducer  = 0.5;
+  const isHorizontal  = window.innerWidth >= window.innerHeight;
+  const width  = window.innerWidth * sizeReducer;
+  const height = isHorizontal ? window.innerHeight * sizeReducer : window.innerWidth * hrztlReducer;
+  return {width, height};
+}
+
 function Resume(props) {
 
+  const {width, height} = getModalDimensions();
   const [displayModal, setDisplayModal] = useState(false);
+  const [modalWidth, setModalWidth] = useState(width);
+  const [modalHeight, setModalHeight] = useState(height);
 
-  const videoFrame = <iframe width="560" height="315" src="https://www.youtube.com/embed/bjM2W6R5yJo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-  const videoModal = <Modal show={displayModal} onHide={e => setDisplayModal(false)} className='video-modal'>
+  const videoFrame = <iframe width={modalWidth} height={modalHeight} src="https://www.youtube.com/embed/bjM2W6R5yJo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  const videoModal = <Modal show={displayModal} onHide={e => setDisplayModal(false)}>
     <Modal.Body>
       {videoFrame}
     </Modal.Body>
   </Modal>;
+
+  const handleResize = useCallback(event => {
+    const {width, height} = getModalDimensions();
+    setModalWidth(width);
+    setModalHeight(height);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
 
   return (
     <>
