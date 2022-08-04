@@ -1,22 +1,73 @@
 .resume {
     width: 100vw;
-    margin-top: 40px;
+    margin-top: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    font-size: 14px;
 }
 
 .resume-intro {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    justify-content: center;;
+    align-items: center;
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.resume-links-container {
+    margin-top: 5px;
+    display: flex;
     justify-content: space-around;
-    width: 67vw;
-    height: 30px;
+    width: 100%;
+}
+
+.resume-title {
+    margin-top: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+    text-alight: left;
+    width: 95vw;
+    border-bottom: 3px solid black;
+}
+
+.resume-skills-title {
+    font-weight: bold;
 }
 
 .resume-linkedin-icon {
-  background-color: rgba(0, 119, 181, 1);
-  color: white;
-  padding: 2px;
-  border-radius: 2px;
+    background-color: rgba(0, 119, 181, 1);
+    color: white;
+    padding: 4px;
+    border-radius: 2px;
+}
+
+.resume-github-icon {
+    color: black;
+    padding: 4px;
+}
+
+.resume-roles {
+    margin-top: 10px;
+}
+
+.resume-item-title {
+    align-items: center;
+}
+
+.resume-item-title-text {
+    font-weight: bold;
+}
+
+.resume-item-title-date {
+    font-style: italic;
+    text-align: right;
+}
+
+@media only screen and (min-width: 768px) {
+    .resume {
+        font-size: 16px;
+    }
 }
