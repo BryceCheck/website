@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faLinkedinIn } from '@fortawesome/free-brands-svg-icons';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Modal, Container, Row, Col } from 'react-bootstrap';
 
 import Navbar from "../Navbar/Navbar";
 
@@ -15,6 +16,15 @@ import uscLogo from '../../Assets/usc-logo.png';
 import vcLogo from '../../Assets/vc-logo.png';
 
 function Resume(props) {
+
+  const [displayModal, setDisplayModal] = useState(false);
+
+  const videoFrame = <iframe width="560" height="315" src="https://www.youtube.com/embed/bjM2W6R5yJo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  const videoModal = <Modal show={displayModal} onHide={e => setDisplayModal(false)} className='video-modal'>
+    <Modal.Body>
+      {videoFrame}
+    </Modal.Body>
+  </Modal>;
 
   return (
     <>
@@ -136,7 +146,7 @@ function Resume(props) {
           </Row>
           <ul className='resume-item-responsibilities'>
             <li>Took a gap year and worked in Santa Clara after my Junior year at USC</li>
-            <li>Created complete testing, reporting, and data ingestion pipeline for <div className='resume-body-link resume-body-div-link'>Swing IQ</div></li>
+            <li>Created complete testing, reporting, and data ingestion pipeline for <div onClick={e => setDisplayModal(true)} className='resume-body-link resume-body-div-link'>Swing IQ</div></li>
             <li>Travelled to San Diego, Seattle, Pullman, Chicago, IMG Academy, CES 2017, and East Stroudsberg University for live testing</li>
             <li>Won Commitment to Excellence Award for devotion to detail on testing data</li>
             <li>Ported Python data ingestion pipeline to C# for production apps</li>
@@ -158,6 +168,7 @@ function Resume(props) {
           </Row>
         </Container>
       </div>
+      {videoModal}
     </>
   );
 }
