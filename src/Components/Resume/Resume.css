@@ -24,12 +24,12 @@
 }
 
 .resume-title {
-    margin-top: 15px;
+    margin: 15px 0px;
     font-size: 24px;
     font-weight: bold;
     color: black;
     text-alight: left;
-    width: 95vw;
+    width: 100%;
     border-bottom: 3px solid black;
 }
 
@@ -49,7 +49,8 @@
     padding: 4px;
 }
 
-.resume-roles {
+.resume-roles,
+.resume-item-responsibilities {
     margin-top: 10px;
 }
 
@@ -64,6 +65,32 @@
 .resume-item-title-date {
     font-style: italic;
     text-align: right;
+}
+
+.resume-body-link {
+    align-items: center;
+    width: fit-content;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    background:
+      linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 1)),
+      linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,1));
+    background-size: 100% 0.1em, 0 0.1em;
+    background-position: 100% 100%, 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 400ms;
+}
+
+.resume-body-link:hover,
+.resume-body-link:focus {
+    cursor: pointer;
+    color: black;
+    background-size: 0 0.1em, 100% 0.1em;
+}
+
+.resume-body-div-link {
+    display: inline;
 }
 
 @media only screen and (min-width: 768px) {
