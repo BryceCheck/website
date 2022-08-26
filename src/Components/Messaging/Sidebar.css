@@ -1,0 +1,13 @@
+.sidebar-initials-label {
+  borer-radius: 50%;
+}
+
+@media (min-width: 768px)
+.container {
+    max-width: 10%;
+}
+
+@media (min-width: 576px)
+.container {
+    max-width: 100px;
+} 
