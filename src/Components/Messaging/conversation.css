@@ -1,0 +1,9 @@
+.messaging-container {
+  margin-top: 50px;
+}
+
+.convo-holder {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

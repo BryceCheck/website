@@ -11,10 +11,12 @@ import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 
+import './conversation.css';
+
 function Chatroom(props) {
   return (<>
     <Navbar/>
-    <Container fluid>
+    <Container fluid className='messaging-container'>
       <Row xs='2'>
         <Col xs='4' md='2'>
           <Sidebar/>

@@ -45,9 +45,7 @@ function SidebarContactListItem(props) {
 function Sidebar(props) {
 
   const [collapsed, setCollapsed] = useState(false);
-  const conversations = useSelector((state => state.conversations));
-
-  console.log(conversations);
+  const conversations = useSelector((state => state.messaging.conversations));
 
   return (
     <Card>
