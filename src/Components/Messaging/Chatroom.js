@@ -15,6 +15,8 @@ import Conversation from './Conversation';
 import { HOST, API_PORT } from '../../consts';
 
 
+import './conversation.css';
+
 function Chatroom(props) {
   
   // Set the state of the function
@@ -44,7 +46,7 @@ function Chatroom(props) {
 
   return (<>
     <Navbar/>
-    <Container fluid>
+    <Container fluid className='messaging-container'>
       <Row xs='2'>
         <Col xs='4' md='2'>
           <Sidebar/>

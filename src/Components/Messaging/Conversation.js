@@ -15,16 +15,19 @@ const inboundMsg = 'inbound-message';
 const outboundMsg = 'outbound-message';
 
 function Conversation(props) {
-  const convo = useSelector(state => state.selectedConvo);
+  const convo = useSelector(state => state.messaging.selectedConvo);
 
   return (
     <Card>
       <ListGroup>
         {/* Display all the messages in the conversation for each party */}
-        {convo.messages.map(msg => {
-          let msgClass = TWILIO_NUMBERS.includes(msg.sender) ? outboundMsg : inboundMsg;
-          return <ListGroup.Item className={msgClass}>msg.text</ListGroup.Item>
-        })}
+        {convo.messages ? convo.messages.map(msg => {
+            let msgClass = TWILIO_NUMBERS.includes(msg.sender) ? outboundMsg : inboundMsg;
+            return <ListGroup.Item className={msgClass}>msg.text</ListGroup.Item>
+          })
+        :
+          <div className='convo-holder'>No messages sent yet...</div>
+        }
       </ListGroup>
       {/* Display a text input for the user to be able to send out a text message */}
       <div className='convo-input-container'>
