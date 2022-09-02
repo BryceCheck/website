@@ -9,19 +9,11 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 
-function sortConvos(a, b) {
-  let aTime = a.messages[a.messages.length - 1].timestamp;
-  let bTime = b.messages[b.messages.length - 1].timestamp;
-  if(aTime > bTime) return 1;
-  else if(aTime === bTime) return 0;
-  else return -1;
-}
-
 export const messagingSlice = createSlice({
   name: 'messaging',
   initialState: {
-    selectedConvo: {},
-    conversations: [],
+    selectedConvo: null,
+    conversations: null,
   },
   reducers: {
     initialize: (state, action) => {
@@ -33,7 +25,6 @@ export const messagingSlice = createSlice({
           number: convoData.phoneNumber
         });
       });
-      convos.sort(sortConvos);
       state.conversations = convos;
       state.selectedConvo = convos[convos.length - 1].customerID;
     },
@@ -41,7 +32,6 @@ export const messagingSlice = createSlice({
       let idx = state.conversations.findIndex(convo => convo.customerID === action.payload.id);
       let convos = state.conversations;
       convos[idx].messages.push(action.payload);
-      convos.sort(sortConvos);
       state.conversations = convos;
     },
   }
