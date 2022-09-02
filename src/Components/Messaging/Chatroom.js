@@ -18,13 +18,11 @@ import { HOST, API_PORT } from '../../consts';
 import './conversation.css';
 
 function Chatroom(props) {
-  
   // Set the state of the function
   const [token, setToken] = useState('');
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
-  var client; 
-  
+  var client;
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
