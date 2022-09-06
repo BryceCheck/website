@@ -5,7 +5,7 @@
 *    that has a collapsable sidebar and a chat area.
 **********************************************************************/
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {Container, Row, Col} from 'react-bootstrap';
 import { Client as ConversationsClient } from '@twilio/conversations';
 
@@ -22,29 +22,34 @@ function Chatroom(props) {
   const [token, setToken] = useState('');
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
-  var client;
+  const client = useRef(null);
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
     const tokenURL = HOST + ':' + API_PORT + '/access-token';
-    fetch(tokenURL)
+    fetch(tokenURL, {
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
     .then(res => {
-      res.json();
+      return res.json();
     })
     // Initialize the chat client
     .then(data => {
       setToken(data.accessToken);
+      var newClient = new ConversationsClient(data.accessToken);
+      client.current = newClient;
+      console.log(newClient);
     })
   }, []);
 
-  // Use the state to initialize the conversations client websocket
-  if(token) {
-    client = ConversationsClient(token);
-  }
-
+  console.log('rendering');
   return (<>
     <Navbar/>
     <Container fluid className='messaging-container'>
+{/*
       <Row xs='2'>
         <Col xs='4' md='2'>
           <Sidebar/>
@@ -53,6 +58,7 @@ function Chatroom(props) {
           <Conversation/>
         </Col>
       </Row>
+*/}
     </Container>
   </>);
 }
