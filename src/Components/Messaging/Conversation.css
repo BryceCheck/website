@@ -1,5 +1,6 @@
 .convo-holder {
-  width: 
+  overflow: none;
+  max-height: 100%;
 }
 
 .convo-input-container {
@@ -14,6 +15,7 @@
 }
 
 .outbound-message, .inbound-message {
+  color: white;
   width: fit-content;
   max-width: 57%;
   border-radius: 5px;

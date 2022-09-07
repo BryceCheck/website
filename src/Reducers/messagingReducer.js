@@ -33,7 +33,7 @@ export const messagingSlice = createSlice({
       state.conversations.push(action.payload);
     },
     leaveConversation: (state, action) => {
-      state.conversations = state.conversations.filter(convo => convo.sid != action.payload.sid);
+      state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
     }
   }
 });

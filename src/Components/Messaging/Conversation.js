@@ -32,20 +32,28 @@ function Conversation(props) {
   }
 
   useEffect(() => {
-    if (props.client.current === null || (convo !== null && convoData === null)) return;
-    props.client.current.getConversationBySid(convoData.sid)
-    .then(convo => {
-      setConvo(convo);
-    });
-  }, [props.client.current]);
+    if (props.client.current === null || convoData === null) {
+      setMessages([]);
+      setConvo(null);
+    } else {
+      props.client.current.getConversationBySid(convoData.sid)
+      .then(convo => {
+        setConvo(convo);
+      });
+    }
+  }, [props.client.current, convoData]);
 
   useEffect(() => {
-    if(convo === null) return;
+    if(convo === null) {
+      setTitle(null);
+      return;
+    }
     // Get the participants
     convo.getParticipants()
     .then(participants => {
       const destination = participants.find(participant => participant.type !== 'chat');
-      setTitle(destination.state.bindings.sms.address);
+      const newTitle = destination ? destination.state.bindings.sms.address : 'No Name';
+      setTitle(newTitle);
     })
     // Get the messages
     convo.getMessages()
@@ -60,10 +68,6 @@ function Conversation(props) {
       setMessages((msgs) => ([...msgs, getDisplayMessage(msg)]));
     });
   }, [convo]);
-
-  useEffect(() => {
-
-  }, [messages]);
 
   const header = <div className='header'>
     {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}

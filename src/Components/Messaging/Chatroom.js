@@ -41,16 +41,6 @@ function Chatroom(props) {
     .then(data => {
       var newClient = new ConversationsClient(data.accessToken);
       client.current = newClient;
-      client.current.on("stateChanged", (state) => {
-        if (state === 'failed') {
-          console.log('client failed');
-        } else if (state === 'initialized') {
-          console.log('client initialized');
-        }
-      });
-      client.current.on("connectionStateChanged", state => {
-        console.log('client state changed:', state);
-      });
       client.current.on("conversationJoined", convo => {
         const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};
         dispatch(newConversation(convoData));
@@ -62,6 +52,7 @@ function Chatroom(props) {
       return client.current.getSubscribedConversations();
     })
     .then(convos => {
+      console.log(convos);
       const convoData = convos.items.map(convo => {
         return {
           sid: convo.sid,
@@ -72,7 +63,7 @@ function Chatroom(props) {
     });
   }, []);
 
-  return (<>
+  return (<div className='chatroom-page'>
     <Navbar/>
     <Container fluid className='messaging-container'>
       <Row xs='2'>
@@ -84,7 +75,7 @@ function Chatroom(props) {
         </Col>
       </Row>
     </Container>
-  </>);
+  </div>);
 }
 
 export default Chatroom;

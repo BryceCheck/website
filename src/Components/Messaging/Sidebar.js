@@ -18,8 +18,13 @@ import { selectConversation } from '../../Reducers/messagingReducer';
 import './Sidebar.css';
 
 function SidebarContactListItem(props) {
+
+  const dispatch = useDispatch();
+
   return (
-    <ListGroup.Item className="convo-selection">
+    <ListGroup.Item className="convo-selection" onClick={() => {
+      dispatch(selectConversation({sid: props.sid}));
+    }}>
       <Col>
         <div className='sidebar-initials-label'>
           {props.initials}
@@ -63,7 +68,9 @@ function Sidebar(props) {
           <button className='sidebar-settings-button'>
             <FontAwesomeIcon icon={faCog}/>
           </button>
-          <button className='sibebar-new-msg-button' onClick={() => dispatch(selectConversation(null))}>
+          <button className='sibebar-new-msg-button' onClick={() => {
+            dispatch(selectConversation(null))
+          }}>
             <FontAwesomeIcon icon={faEdit}/>
           </button>
         </Card.Title>
@@ -81,8 +88,8 @@ function Sidebar(props) {
             return <SidebarContactListItem
               initials={initials}
               collapsed={collapsed}
-              number={convo.number}
               messages={convo.messages}
+              sid={convo.sid}
               key={convo.sid}
             />;
           })}
