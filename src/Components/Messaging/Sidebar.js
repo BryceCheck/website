@@ -7,10 +7,13 @@
 ********************************************************************************/
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Card, ListGroup, Col, Stack } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faArrowLeft, faArrowRight,
+         faEdit } from '@fortawesome/free-solid-svg-icons';
+
+import { selectConversation } from '../../Reducers/messagingReducer';
 
 function SidebarContactListItem(props) {
   return (
@@ -44,8 +47,9 @@ function SidebarContactListItem(props) {
 
 function Sidebar(props) {
 
+  const dispatch = useDispatch();
   const [collapsed, setCollapsed] = useState(false);
-  const conversations = useSelector((state => state.messaging.conversations));
+  const conversations = useSelector((state => { return state.messaging.conversations }));
 
   return (
     <Card>
@@ -57,24 +61,28 @@ function Sidebar(props) {
           <button className='sidebar-settings-button'>
             <FontAwesomeIcon icon={faCog}/>
           </button>
+          <button className='sibebar-new-msg-button' onClick={() => dispatch(selectConversation(null))}>
+            <FontAwesomeIcon icon={faEdit}/>
+          </button>
         </Card.Title>
         <ListGroup>
           {conversations.map(convo => {
             var initials;
-            const names = convo.name.split();
+            const names = convo.title.split();
             if (names.length === 1) {
-              initials = names[0][0];
+              initials = convo.title;
             } else if (names.length === 2) {
               initials = names[0][0] + names[1][0];
             } else {
               initials = '??';
             }
             return <SidebarContactListItem
-                 initials={initials}
-                 collapsed={collapsed}
-                 number={convo.number}
-                 messages={convo.messages}
-               />;
+              initials={initials}
+              collapsed={collapsed}
+              number={convo.number}
+              messages={convo.messages}
+              key={convo.sid}
+            />;
           })}
         </ListGroup>
       </Card.Body>

@@ -5,7 +5,8 @@
 *    that has a collapsable sidebar and a chat area.
 **********************************************************************/
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
 import {Container, Row, Col} from 'react-bootstrap';
 import { Client as ConversationsClient } from '@twilio/conversations';
 
@@ -14,15 +15,15 @@ import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 import { HOST, API_PORT } from '../../consts';
 
+import { initialize } from '../../Reducers/messagingReducer';
 
-import './conversation.css';
+import './Chatroom.css';
 
 function Chatroom(props) {
-  // Set the state of the function
-  const [token, setToken] = useState('');
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
   const client = useRef(null);
+  const dispatch = useDispatch();
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
@@ -38,27 +39,42 @@ function Chatroom(props) {
     })
     // Initialize the chat client
     .then(data => {
-      setToken(data.accessToken);
       var newClient = new ConversationsClient(data.accessToken);
       client.current = newClient;
-      console.log(newClient);
+      client.current.on("stateChanged", (state) => {
+        if (state === 'failed') {
+          console.log('client failed');
+        } else if (state === 'initialized') {
+          console.log('client initialized');
+        }
+      });
+      client.current.on("connectionStateChanged", state => {
+        console.log('client state changed:', state);
+      });
+      return client.current.getSubscribedConversations();
     })
+    .then(convos => {
+      const convoData = convos.items.map(convo => {
+        return {
+          sid: convo.sid,
+          title: convo.friendlyName ? convo.friendlyName : ''
+        };
+      });
+      dispatch(initialize(convoData));
+    });
   }, []);
 
-  console.log('rendering');
   return (<>
     <Navbar/>
     <Container fluid className='messaging-container'>
-{/*
       <Row xs='2'>
         <Col xs='4' md='2'>
           <Sidebar/>
         </Col>
         <Col xs='8' md='10'>
-          <Conversation/>
+          <Conversation client={client}/>
         </Col>
       </Row>
-*/}
     </Container>
   </>);
 }

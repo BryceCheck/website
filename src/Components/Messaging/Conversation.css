@@ -1,0 +1,12 @@
+.convo-input-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.convo-text-input {
+  width: 70%;
+}
+
+.convo-send-button {
+  width: 25%;
+}
