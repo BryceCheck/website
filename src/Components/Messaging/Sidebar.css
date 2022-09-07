@@ -2,6 +2,10 @@
   borer-radius: 50%;
 }
 
+.convo-selection:hover {
+  cursor: pointer;
+}
+
 @media (min-width: 768px)
 .container {
     max-width: 10%;

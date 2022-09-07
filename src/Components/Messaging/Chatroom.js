@@ -15,7 +15,7 @@ import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 import { HOST, API_PORT } from '../../consts';
 
-import { initialize } from '../../Reducers/messagingReducer';
+import { initialize, newConversation, leaveConversation } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
 
@@ -50,6 +50,14 @@ function Chatroom(props) {
       });
       client.current.on("connectionStateChanged", state => {
         console.log('client state changed:', state);
+      });
+      client.current.on("conversationJoined", convo => {
+        const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};
+        dispatch(newConversation(convoData));
+      });
+      client.current.on("conversationLeft", convo => {
+        const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};
+        dispatch(leaveConversation(convoData));
       });
       return client.current.getSubscribedConversations();
     })

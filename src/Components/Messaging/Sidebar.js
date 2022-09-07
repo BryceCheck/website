@@ -15,9 +15,11 @@ import { faCog, faArrowLeft, faArrowRight,
 
 import { selectConversation } from '../../Reducers/messagingReducer';
 
+import './Sidebar.css';
+
 function SidebarContactListItem(props) {
   return (
-    <ListGroup.Item>
+    <ListGroup.Item className="convo-selection">
       <Col>
         <div className='sidebar-initials-label'>
           {props.initials}

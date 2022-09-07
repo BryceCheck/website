@@ -21,7 +21,7 @@ function Conversation(props) {
 
   const destinationRef = useRef(null);
   const messageRef = useRef(null);
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(null);
   const [messages, setMessages] = useState(null);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
@@ -40,8 +40,8 @@ function Conversation(props) {
     convo.getParticipants()
     .then(participants => {
       const destination = participants.find(participant => participant.type !== 'chat');
-      console.log(participants);
-      setTitle(destination.identity);
+      console.log(destination);
+      //setTitle(destination);
     })
     // Get the messages
     convo.getMessages()
@@ -50,7 +50,13 @@ function Conversation(props) {
     })
   }, [convo]);
 
-  const header = title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>
+  const header = <div className='header'>
+    {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
+    <button className='convo-leave-button' style={{display: convo ? 'block' : 'none'}} onClick={() => {
+      convo.leave();
+    }}>X
+    </button>
+  </div>
 
   return (
     <Card>
@@ -60,7 +66,7 @@ function Conversation(props) {
       <Card.Body>
         <ListGroup>
           {/* Display all the messages in the conversation for each party */}
-          {messages ? messages : <div className='convo-holder'>No messages sent yet...</div> }
+          {/*messages ? messages : <div className='convo-holder'>No messages sent yet...</div>*/}
         </ListGroup>
       </Card.Body>
       <Card.Footer>
@@ -79,11 +85,16 @@ function Conversation(props) {
               .then(convo => {
                 return convo.join();
               })
-              .then(async convo => {
+              .then(convo => {
                 // Do error checking to make sure the phone number is valid
-                await convo.addNonChatParticipant(TWILIO_NUMBER, destination);
-                return convo.sendMessage(message);
+                convo.addNonChatParticipant(TWILIO_NUMBER, destination);
+                return convo;
               })
+              .then(convo => {
+                convo.sendMessage(message);
+              })
+            } else {
+              
             }
           }}>Send</button>
         </div>

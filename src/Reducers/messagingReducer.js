@@ -28,10 +28,17 @@ export const messagingSlice = createSlice({
     },
     selectConversation: (state, action) => {
       state.selectedConvo = action.payload;
+    },
+    newConversation: (state, action) => {
+      state.conversations.push(action.payload);
+    },
+    leaveConversation: (state, action) => {
+      state.conversations = state.conversations.filter(convo => convo.sid != action.payload.sid);
     }
   }
 });
 
-export const { initialize, newMessage, selectConversation } = messagingSlice.actions;
+export const { initialize, newMessage, selectConversation,
+               newConversation, leaveConversation } = messagingSlice.actions;
 
 export default messagingSlice.reducer;
