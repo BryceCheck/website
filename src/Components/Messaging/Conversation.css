@@ -1,9 +1,20 @@
+.convo-holder {
+  width: 
+}
+
 .convo-input-container {
   display: flex;
   justify-content: space-between;
 }
 
+.msg-holder {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .outbound-message, .inbound-message {
+  width: fit-content;
   max-width: 57%;
   border-radius: 5px;
   padding-left: 10px;
@@ -15,7 +26,7 @@
 }
 
 .inbound-message {
-  float: right;
+  margin-left: auto;
   align-text: right;
   background-color: grey;
 }

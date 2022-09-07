@@ -22,9 +22,14 @@ function Conversation(props) {
   const destinationRef = useRef(null);
   const messageRef = useRef(null);
   const [title, setTitle] = useState(null);
-  const [messages, setMessages] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
+
+  function getDisplayMessage(twilioMsg) {
+    let msgClass = twilioMsg.author === 'schultz' ? outboundMsg : inboundMsg;
+    return <div className={msgClass}>{twilioMsg.body}</div>;
+  }
 
   useEffect(() => {
     if (props.client.current === null || (convo !== null && convoData === null)) return;
@@ -51,7 +56,14 @@ function Conversation(props) {
       });
       setMessages(msgs);
     })
+    convo.on('messageAdded', msg => {
+      setMessages((msgs) => ([...msgs, getDisplayMessage(msg)]));
+    });
   }, [convo]);
+
+  useEffect(() => {
+
+  }, [messages]);
 
   const header = <div className='header'>
     {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
@@ -62,7 +74,7 @@ function Conversation(props) {
   </div>
 
   return (
-    <Card>
+    <Card className='convo-holder'>
       <Card.Header>
         {header}
       </Card.Header>
@@ -78,12 +90,17 @@ function Conversation(props) {
           <input ref={messageRef} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
             const message = messageRef.current.value;
-            const destination = destinationRef.current.value;
-            console.log(message, destination, convo);
             if (convo === null) {
+              const destination = destinationRef.current.value;
               props.client.current.createConversation({
                 friendlyName: destination,
                 uniqueName:   destination
+              })
+              .then(convo => {
+                convo.on('messageAdded', msg => {
+                  console.log('adding new message from new convo');
+                  setMessages((msgs) => ([...msgs, msg]));
+                });
               })
               .then(convo => {
                 return convo.join();
@@ -97,8 +114,9 @@ function Conversation(props) {
                 convo.sendMessage(message);
               })
             } else {
-              
+              convo.sendMessage(message);
             }
+            messageRef.current.value = '';
           }}>Send</button>
         </div>
       </Card.Footer>
