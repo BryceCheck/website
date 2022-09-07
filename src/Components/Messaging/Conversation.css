@@ -3,6 +3,23 @@
   justify-content: space-between;
 }
 
+.outbound-message, .inbound-message {
+  max-width: 57%;
+  border-radius: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.outbound-message {
+  background-color: cornflowerblue;
+}
+
+.inbound-message {
+  float: right;
+  align-text: right;
+  background-color: grey;
+}
+
 .header {
   display: flex;
   justify-content: space-between;

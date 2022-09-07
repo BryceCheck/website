@@ -40,13 +40,16 @@ function Conversation(props) {
     convo.getParticipants()
     .then(participants => {
       const destination = participants.find(participant => participant.type !== 'chat');
-      console.log(destination);
-      //setTitle(destination);
+      setTitle(destination.state.bindings.sms.address);
     })
     // Get the messages
     convo.getMessages()
     .then(msgPaginator => {
-      console.log(msgPaginator.items);
+      const msgs = msgPaginator.items.map(msg => {
+        let msgClass = msg.author === 'schultz' ? outboundMsg : inboundMsg;
+        return <div className={msgClass}>{msg.body}</div>
+      });
+      setMessages(msgs);
     })
   }, [convo]);
 
@@ -64,10 +67,10 @@ function Conversation(props) {
         {header}
       </Card.Header>
       <Card.Body>
-        <ListGroup>
+        <div className='msg-holder'>
           {/* Display all the messages in the conversation for each party */}
-          {/*messages ? messages : <div className='convo-holder'>No messages sent yet...</div>*/}
-        </ListGroup>
+          {messages ? messages : <div className='convo-holder'>No messages sent yet...</div>}
+        </div>
       </Card.Body>
       <Card.Footer>
         {/* Display a text input for the user to be able to send out a text message */}
