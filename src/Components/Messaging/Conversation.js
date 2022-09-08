@@ -7,8 +7,10 @@
 *********************************************************************************/
 
 import { useEffect, useState, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Card, ListGroup } from 'react-bootstrap';
+
+import { selectConversation, newConversation } from '../../Reducers/messagingReducer';
 
 import { TWILIO_NUMBER } from '../../consts';
 
@@ -25,6 +27,7 @@ function Conversation(props) {
   const [messages, setMessages] = useState([]);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
+  const dispatch = useDispatch();
 
   function getDisplayMessage(twilioMsg) {
     let msgClass = twilioMsg.author === 'schultz' ? outboundMsg : inboundMsg;
@@ -36,6 +39,7 @@ function Conversation(props) {
       setMessages([]);
       setConvo(null);
     } else {
+      console.log('retrieving conversation', convoData.sid);
       props.client.current.getConversationBySid(convoData.sid)
       .then(convo => {
         setConvo(convo);
@@ -72,7 +76,8 @@ function Conversation(props) {
   const header = <div className='header'>
     {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
     <button className='convo-leave-button' style={{display: convo ? 'block' : 'none'}} onClick={() => {
-      convo.leave();
+      convo.delete();
+      dispatch(selectConversation(null));
     }}>X
     </button>
   </div>
@@ -96,17 +101,22 @@ function Conversation(props) {
             const message = messageRef.current.value;
             if (convo === null) {
               const destination = destinationRef.current.value;
-              props.client.current.createConversation({
-                friendlyName: destination,
-                uniqueName:   destination
+              //Check to see if the conversation already exists
+              props.client.current.getConversationByUniqueName(destination)
+              .then(convo => {
+                return convo;
+              // If the conversation isn't found, create a new one
+              }, _ => {
+                return props.client.current.createConversation({
+                  friendlyName: destination,
+                  uniqueName:   destination
+                })
               })
+              // Add the messages listener and join the conversation
               .then(convo => {
                 convo.on('messageAdded', msg => {
-                  console.log('adding new message from new convo');
                   setMessages((msgs) => ([...msgs, msg]));
                 });
-              })
-              .then(convo => {
                 return convo.join();
               })
               .then(convo => {
@@ -116,6 +126,8 @@ function Conversation(props) {
               })
               .then(convo => {
                 convo.sendMessage(message);
+                const convoData = {sid: convo.sid, title: destination};
+                dispatch(newConversation(convoData));
               })
             } else {
               convo.sendMessage(message);

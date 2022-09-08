@@ -52,7 +52,11 @@ function Chatroom(props) {
       return client.current.getSubscribedConversations();
     })
     .then(convos => {
-      console.log(convos);
+      for(var i = 0; i < convos.items.length; i++) {
+        if (convos.items[i].channelState.status === 'notParticipating') {
+          convos.items[i].delete();
+        }
+      }
       const convoData = convos.items.map(convo => {
         return {
           sid: convo.sid,

@@ -30,7 +30,14 @@ export const messagingSlice = createSlice({
       state.selectedConvo = action.payload;
     },
     newConversation: (state, action) => {
+      for(var i = 0; i < state.conversations.length; i++) {
+        if (state.conversations[i].sid === action.payload.sid) {
+          state.selectedConvo = action.payload;
+          return;
+        }
+      }
       state.conversations.push(action.payload);
+      state.selectedConvo = action.payload;
     },
     leaveConversation: (state, action) => {
       state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
