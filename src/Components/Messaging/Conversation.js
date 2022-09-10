@@ -140,7 +140,7 @@ function Conversation(props) {
           const msg = msgs[i];
           const msgClass = msgs[classNamesIdx + i];
           if (typeof(msg) === 'string' && ![inboundMsg, outboundMsg].includes(msg)) {
-            msgDivs.push(<img src={msg} alt='msg not displayed' className={msgClass}/>);
+            msgDivs.push(<img src={msg} alt='msg not displayed' className={msgClass + ' media-message'}/>);
           } else {
             msgDivs.push(<div className={msgClass}>{msg.body}</div>);
           }
@@ -151,9 +151,24 @@ function Conversation(props) {
     fetchMessages();
     if(!convo) return;
     convo.on('messageAdded', msg => {
-      setMessages((msgs) => ([...msgs, getDisplayMessage(msg)]));
+      processNewMessage(msg);
     });
   }, [convo]);
+
+  const processNewMessage = (msg) => {
+    const msgClass = msg.author === 'schultz' ? outboundMsg : inboundMsg;
+    if (msg.type === 'media') {
+      // Get the url and display the img div
+      msg.media.getContentTemporaryUrl()
+      .then(url => {
+        const imgTag = <img src={url} alt='Media Message Format not allwed' className={msgClass + ' media-message'}/>
+        setMessages((msgs) => [...msgs, imgTag]);
+      });
+    } else {
+      const msgJsx = <div className={msgClass}>{msg.body}</div>;
+      setMessages((msgs) => [...msgs, msgJsx]);
+    }
+  }
 
   const sendMessage = () => {
     // Check the length of the message
@@ -216,7 +231,7 @@ function Conversation(props) {
               // Add the messages listener and join the conversation
               .then(convo => {
                 convo.on('messageAdded', msg => {
-                  setMessages((msgs) => ([...msgs, msg]));
+                  processNewMessage(msg);
                 });
                 return convo.join();
               })

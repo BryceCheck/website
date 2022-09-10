@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 75vh;
+  overflow: auto;
 }
 
 .outbound-message, .inbound-message {
@@ -31,6 +33,11 @@
   margin-left: auto;
   align-text: right;
   background-color: grey;
+}
+
+.media-message {
+  max-width: 30%;
+  padding: 30px;
 }
 
 .header {
