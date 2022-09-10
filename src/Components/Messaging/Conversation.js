@@ -13,7 +13,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark, faPaperclip, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import { selectConversation, newConversation } from '../../Reducers/messagingReducer';
-import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS } from '../../consts';
+import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
+         MAX_MESSAGE_LENGTH } from '../../consts';
 
 import './Conversation.css';
 
@@ -65,7 +66,7 @@ function Conversation(props) {
   useEffect(() => {
     // Check to see if the photo was removed
     if(!selectedFile) {
-      fileUploadRef.current.value = null;
+      fileUploadRef.current.value = null; // Hanldes uploading and deleting the same file multiiple times
       setFileRow(null);
       return;
     }
@@ -130,6 +131,24 @@ function Conversation(props) {
     });
   }, [convo]);
 
+  const sendMessage = () => {
+    // Check the length of the message
+    if (messageRef.current.value.length > MAX_MESSAGE_LENGTH) {
+      setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
+    } else {
+      convo.sendMessage(messageRef.current.value);
+    }
+    // Send the media message if it exists message
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    convo.sendMessage(formData);
+    // Reset the state
+    setSelectedFile(null);
+    fileUploadRef.current.value = null;
+    messageRef.current.value = '';
+  }
+
   // Create the react components for the header
   const header = <div className='header'>
     {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
@@ -183,12 +202,12 @@ function Conversation(props) {
                 return convo;
               })
               .then(convo => {
-                convo.sendMessage(message);
+                sendMessage();
                 const convoData = {sid: convo.sid, title: destination};
                 dispatch(newConversation(convoData));
               })
             } else {
-              convo.sendMessage(message);
+              sendMessage();
             }
             messageRef.current.value = '';
           }}>

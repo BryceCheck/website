@@ -3,6 +3,7 @@ export const HOST = 'http://brycecheck.com'
 export const API_PORT = 3001;
 // File parameters
 export const MAX_FILE_SIZE = 2**24 // 16 MB
+export const MAX_MESSAGE_LENGTH = 2**10;
 export const ALLOWABLE_FILE_EXTENSIONS = [
   'png',
   'svg',
