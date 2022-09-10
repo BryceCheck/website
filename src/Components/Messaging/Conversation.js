@@ -106,26 +106,50 @@ function Conversation(props) {
 
   // An effect to render the messages and title of the conversation component
   useEffect(() => {
-    if(convo === null) {
-      setTitle(null);
-      return;
-    }
-    // Get the participants
-    convo.getParticipants()
-    .then(participants => {
-      const destination = participants.find(participant => participant.type !== 'chat');
-      const newTitle = destination ? destination.state.bindings.sms.address : 'No Name';
-      setTitle(newTitle);
-    })
-    // Get the messages
-    convo.getMessages()
-    .then(msgPaginator => {
-      const msgs = msgPaginator.items.map(msg => {
-        let msgClass = msg.author === 'schultz' ? outboundMsg : inboundMsg;
-        return <div className={msgClass}>{msg.body}</div>
+    const fetchMessages = async () => {
+      if(convo === null) {
+        setTitle(null);
+        return null;
+      }
+      // Get the participants
+      convo.getParticipants()
+      .then(participants => {
+        const destination = participants.find(participant => participant.type !== 'chat');
+        const newTitle = destination ? destination.state.bindings.sms.address : 'No Name';
+        setTitle(newTitle);
+        return convo.getMessages();
+      })
+      // Get the messages
+      .then(msgPaginator => {
+        const msgs = msgPaginator.items.map(msg => {
+          if (msg.type === 'media') {
+            return msg.media.getContentTemporaryUrl();
+          } else {
+            return msg;
+          }
+        })
+        const classNames = msgPaginator.items.map(msg => {
+          return msg.author === 'schultz' ? outboundMsg : inboundMsg;
+        });
+        return Promise.all([...msgs, ...classNames]);
+      })
+      .then(msgs => {
+        const msgDivs = [];
+        const classNamesIdx = msgs.length / 2;
+        for(var i = 0; i < msgs.length / 2; i++) {
+          const msg = msgs[i];
+          const msgClass = msgs[classNamesIdx + i];
+          if (typeof(msg) === 'string' && ![inboundMsg, outboundMsg].includes(msg)) {
+            msgDivs.push(<img src={msg} alt='msg not displayed' className={msgClass}/>);
+          } else {
+            msgDivs.push(<div className={msgClass}>{msg.body}</div>);
+          }
+        }
+        setMessages(msgDivs);
       });
-      setMessages(msgs);
-    })
+    }
+    fetchMessages();
+    if(!convo) return;
     convo.on('messageAdded', msg => {
       setMessages((msgs) => ([...msgs, getDisplayMessage(msg)]));
     });
@@ -209,7 +233,6 @@ function Conversation(props) {
             } else {
               sendMessage();
             }
-            messageRef.current.value = '';
           }}>
             <FontAwesomeIcon icon={faPaperPlane}/>
           </button>
