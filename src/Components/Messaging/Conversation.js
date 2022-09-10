@@ -8,11 +8,12 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, ListGroup } from 'react-bootstrap';
+import { Card } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleXmark, faPaperclip, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import { selectConversation, newConversation } from '../../Reducers/messagingReducer';
-
-import { TWILIO_NUMBER } from '../../consts';
+import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS } from '../../consts';
 
 import './Conversation.css';
 
@@ -23,23 +24,78 @@ function Conversation(props) {
 
   const destinationRef = useRef(null);
   const messageRef = useRef(null);
+  const fileUploadRef = useRef(null);
   const [title, setTitle] = useState(null);
+  const [conversationStatusMessage, setConversationStatusMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileRow, setFileRow] = useState(null);
   const [messages, setMessages] = useState([]);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
   const dispatch = useDispatch();
 
-  function getDisplayMessage(twilioMsg) {
+  // Hanldes how to create the title for the Conversation Card Title
+  const getDisplayMessage = (twilioMsg) => {
     let msgClass = twilioMsg.author === 'schultz' ? outboundMsg : inboundMsg;
     return <div className={msgClass}>{twilioMsg.body}</div>;
   }
 
+  // Handles checking file for extensions, size, formatting and sets status message if needed
+  const checkFile = (file) => {
+    // Check the file size
+    if(file.size > MAX_FILE_SIZE) {
+      setConversationStatusMessage('File too large. Max file size is 16 MB');
+      return false;
+    }
+    // Check the file name format
+    const nameArray = file.name.split('.');
+    if(nameArray.length !== 2) {
+      setConversationStatusMessage('Incorrect file format: "file name"."extension" is the only allowable format');
+      return false;
+    }
+    // check the file extensions
+    const allowableExtension = ALLOWABLE_FILE_EXTENSIONS.find(ext => ext === nameArray[1]);
+    if (!allowableExtension) {
+      setConversationStatusMessage('Only allowable file extensions are ' + ALLOWABLE_FILE_EXTENSIONS.join(', '));
+      return false;
+    }
+    return true;
+  }
+
+  useEffect(() => {
+    // Check to see if the photo was removed
+    if(!selectedFile) {
+      fileUploadRef.current.value = null;
+      setFileRow(null);
+      return;
+    }
+    // Create a JSX component that has a link to a picture modal, thumbnail, and delete button
+    const imgSrc = URL.createObjectURL(selectedFile);
+    setFileRow(<div className='conversation-file-row'>
+      <div className='image-metadata-container'>
+        <img height="20px" src={imgSrc} alt='img' className='conversation-img-thumbnail'/>
+        <div className='conversation-image-link'>{selectedFile.name}</div>
+      </div>
+      <FontAwesomeIcon onClick={() => setSelectedFile(null)}icon={faCircleXmark} className='conversation-img-delete-button'/>
+    </div>);
+  }, [selectedFile]);
+
+  // Hanldes the logic behind file uploads
+  const handleFileUpload = (event) => {
+    if (event.target.files.length === 0 ) return;
+    const file = event.target.files[0];
+    if (!checkFile(file)) return;
+    // Set the file status
+    setSelectedFile(file);
+    setConversationStatusMessage('');
+  }
+
+  // An effect to get the right conversation once props or convoData change
   useEffect(() => {
     if (props.client.current === null || convoData === null) {
       setMessages([]);
       setConvo(null);
     } else {
-      console.log('retrieving conversation', convoData.sid);
       props.client.current.getConversationBySid(convoData.sid)
       .then(convo => {
         setConvo(convo);
@@ -47,6 +103,7 @@ function Conversation(props) {
     }
   }, [props.client.current, convoData]);
 
+  // An effect to render the messages and title of the conversation component
   useEffect(() => {
     if(convo === null) {
       setTitle(null);
@@ -73,6 +130,7 @@ function Conversation(props) {
     });
   }, [convo]);
 
+  // Create the react components for the header
   const header = <div className='header'>
     {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
     <button className='convo-leave-button' style={{display: convo ? 'block' : 'none'}} onClick={() => {
@@ -133,7 +191,20 @@ function Conversation(props) {
               convo.sendMessage(message);
             }
             messageRef.current.value = '';
-          }}>Send</button>
+          }}>
+            <FontAwesomeIcon icon={faPaperPlane}/>
+          </button>
+          {/* Create a hidden file input that is triggered by a button click */}
+          <input type="file" ref={fileUploadRef} className="convo-file-upload" onChange={(event) => handleFileUpload(event)}/>
+          <button className='convo-attach-content' onClick={() => fileUploadRef.current.click()}>
+            <FontAwesomeIcon icon={faPaperclip}/>
+          </button>
+        </div>
+        <div className='conversation-state-container'>
+          {fileRow}
+          <div className='conversation-status-container'>
+            {conversationStatusMessage}
+          </div>
         </div>
       </Card.Footer>
     </Card>

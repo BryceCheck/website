@@ -38,10 +38,78 @@
   justify-content: space-between;
 }
 
-.convo-text-input {
-  width: 70%;
+.convo-text-input, .destination-text-input {
+  border-radius: 5px;
 }
 
-.convo-send-button {
-  width: 25%;
+.convo-text-input {
+  width: 60%;
+}
+
+.convo-send-button, .convo-attach-content {
+  width: 15%;
+  border-radius: 5px;
+  background-color: blue;
+  color: white;
+}
+
+.convo-file-upload {
+  display: none;
+}
+
+.conversation-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.conversation-file-row {
+  padding-top: 10px;
+  width: 30%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conversation-status-container {
+  color: red;
+}
+
+.image-metadata-container {
+  display: flex;  
+  align-items: center;
+}
+
+.conversation-image-link {
+  margin-left: 10px;
+  align-items: center;
+  width: fit-content;
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  background:
+    linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 1)),
+    linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,1));
+  background-size: 100% 0.1em, 0 0.1em;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms;
+}
+
+.conversation-image-link:hover,
+.conversation-image-link:focus {
+  cursor: pointer;
+  color: black;
+  background-size: 0 0.1em, 100% 0.1em;
+}
+
+.conversation-img-delete-button {
+  height: 20px;
+  color: red;
+  cursor: pointer;
+}
+
+.conversation-img-delete-button:hover {
+  pointer: cursor;
 }

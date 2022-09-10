@@ -62,17 +62,19 @@ function Sidebar(props) {
     <Card>
       <Card.Body>
         <Card.Title>
-          <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
-            <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
-          </button>
-          <button className='sidebar-settings-button'>
-            <FontAwesomeIcon icon={faCog}/>
-          </button>
-          <button className='sibebar-new-msg-button' onClick={() => {
-            dispatch(selectConversation(null))
-          }}>
-            <FontAwesomeIcon icon={faEdit}/>
-          </button>
+          <div className='sidebar-title'>
+            <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
+              <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
+            </button>
+            <button className='sidebar-settings-button'>
+              <FontAwesomeIcon icon={faCog}/>
+            </button>
+            <button className='sibebar-new-msg-button' onClick={() => {
+              dispatch(selectConversation(null))
+            }}>
+              <FontAwesomeIcon icon={faEdit}/>
+            </button>
+          </div>
         </Card.Title>
         <ListGroup>
           {conversations.map(convo => {
