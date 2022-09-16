@@ -90,10 +90,12 @@ function Conversation(props) {
 
   // An effect to get the right conversation once props or convoData change
   useEffect(() => {
+    console.log('rendering messages in conversation');
     if (props.client.current === null || convoData === null) {
       setMessages([]);
       setConvo(null);
     } else {
+      console.log(convoData.sid);
       props.client.current.getConversationBySid(convoData.sid)
       .then(convo => {
         setConvo(convo);

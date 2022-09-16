@@ -20,25 +20,28 @@ import './Sidebar.css';
 function SidebarContactListItem(props) {
 
   const currConvo = useSelector(state => state.messaging.selectedConvo);
-  const convoId = useSelector(state => state.messaging.conversations.find(convo => convo.sid === props.sid));
   const [convo, setConvo] = useState(null);
   const [isRead, setIsRead] = useState(true);
   const dispatch = useDispatch();
+
+  const updateSidebar = (msg) => {
+    if(msg.title !== 'schultz' && currConvo.sid !== props.sid) setIsRead(false);
+  }
 
   // Get the conversation on component mount
   useEffect(() => {
     props.client.current.getConversationBySid(props.sid)
     .then(convo => {
-      convo.on("messageAdded", msg => {
-        if(currConvo !== props.sid) setIsRead(false);
-      });
+      convo.on("messageAdded", updateSidebar);
     });
   }, []);
 
   return (
     <ListGroup.Item className="convo-selection" onClick={() => {
-      dispatch(selectConversation({sid: props.sid}));
-      setIsRead(true);
+      if (props.sid !== currConvo.sid) {
+        dispatch(selectConversation({title: props.initials, sid: props.sid}));
+        setIsRead(true);
+      }
     }}>
       <Col>
         <div className='sidebar-initials-label' style={{fontWeight: isRead ? 'normal' : 'bold'}}>
