@@ -10,7 +10,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleXmark, faPaperclip, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faCircleXmark, faPaperclip, faPaperPlane,
+         faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 import { selectConversation, newConversation } from '../../Reducers/messagingReducer';
 import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
@@ -24,22 +26,17 @@ const outboundMsg = 'outbound-message';
 function Conversation(props) {
 
   const destinationRef = useRef(null);
-  const messageRef = useRef(null);
   const fileUploadRef = useRef(null);
   const [title, setTitle] = useState(null);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
+  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [chatTypeIcon, setChatTypeIcon] = useState(null);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
   const dispatch = useDispatch();
-
-  // Hanldes how to create the title for the Conversation Card Title
-  const getDisplayMessage = (twilioMsg) => {
-    let msgClass = twilioMsg.author === 'schultz' ? outboundMsg : inboundMsg;
-    return <div className={msgClass}>{twilioMsg.body}</div>;
-  }
 
   // Handles checking file for extensions, size, formatting and sets status message if needed
   const checkFile = (file) => {
@@ -102,11 +99,11 @@ function Conversation(props) {
         setConvo(convo);
       });
     }
-  }, [props.client.current, convoData]);
+  }, [props.client, convoData]);
 
   // An effect to render the messages and title of the conversation component
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchMessages = () => {
       if(convo === null) {
         setTitle(null);
         return null;
@@ -114,8 +111,9 @@ function Conversation(props) {
       // Get the participants
       convo.getParticipants()
       .then(participants => {
+        const newDestination = destinationRef.current ? destinationRef.current.value : '';
         const destination = participants.find(participant => participant.type !== 'chat');
-        const newTitle = destination ? destination.state.bindings.sms.address : 'No Name';
+        const newTitle = destination ? destination.state.bindings.sms.address : newDestination;
         setTitle(newTitle);
         return convo.getMessages();
       })
@@ -153,6 +151,9 @@ function Conversation(props) {
     convo.on('messageAdded', msg => {
       processNewMessage(msg);
     });
+    if(message) {
+      sendMessage();
+    }
   }, [convo]);
 
   const processNewMessage = (msg) => {
@@ -171,12 +172,14 @@ function Conversation(props) {
   }
 
   const sendMessage = () => {
+    if(convo === null) return;
     // Check the length of the message
-    if (messageRef.current.value.length > MAX_MESSAGE_LENGTH) {
+    if (message.length > MAX_MESSAGE_LENGTH) {
       setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
     } else {
-      convo.sendMessage(messageRef.current.value);
+      convo.sendMessage(message);
     }
+    setMessage('');
     // Send the media message if it exists message
     if (!selectedFile) return;
     const formData = new FormData();
@@ -185,23 +188,25 @@ function Conversation(props) {
     // Reset the state
     setSelectedFile(null);
     fileUploadRef.current.value = null;
-    messageRef.current.value = '';
   }
-
-  // Create the react components for the header
-  const header = <div className='header'>
-    {title ? title : <input ref={destinationRef} placeholder="Destination..." className="destination-text-input"/>}
-    <button className='convo-leave-button' style={{display: convo ? 'block' : 'none'}} onClick={() => {
-      convo.delete();
-      dispatch(selectConversation(null));
-    }}>X
-    </button>
-  </div>
 
   return (
     <Card className='convo-holder'>
       <Card.Header>
-        {header}
+        <div className='header'>
+          {title ? title : <input ref={destinationRef} placeholder="Destination..." className='destination-text-input'/>}
+          <div className='convo-type-container'>
+            <FontAwesomeIcon icon={faSms} className='sms-icon' size='xl'/>
+            <FontAwesomeIcon icon={faEnvelope} className='email-icon' size='xl'/>
+            <FontAwesomeIcon icon={faWhatsapp} className='whatsapp-icon' size='xl'/>
+          </div>
+          <button className='convo-leave-button' disabled={!convo} onClick={() => {
+            convo.delete();
+            dispatch(selectConversation(null));
+          }}>
+            <FontAwesomeIcon icon={faCircleXmark} className='convo-leave-button-icon'/>
+          </button>
+        </div>
       </Card.Header>
       <Card.Body>
         <div className='msg-holder'>
@@ -212,9 +217,8 @@ function Conversation(props) {
       <Card.Footer>
         {/* Display a text input for the user to be able to send out a text message */}
         <div className='convo-input-container'>
-          <input ref={messageRef} placeholder="Message..." className="convo-text-input"/>
+          <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
-            const message = messageRef.current.value;
             if (convo === null) {
               const destination = destinationRef.current.value;
               //Check to see if the conversation already exists

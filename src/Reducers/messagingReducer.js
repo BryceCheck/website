@@ -20,12 +20,6 @@ export const messagingSlice = createSlice({
       state.conversations = action.payload;
       state.selectedConvo = action.payload.length === 0 ? null : action.payload[action.payload.length - 1];
     },
-    newMessage: (state, action) => {
-      let idx = state.conversations.findIndex(convo => convo.customerID === action.payload.id);
-      let convos = state.conversations;
-      convos[idx].messages.push(action.payload);
-      state.conversations = convos;
-    },
     selectConversation: (state, action) => {
       state.selectedConvo = action.payload;
     },
@@ -45,7 +39,7 @@ export const messagingSlice = createSlice({
   }
 });
 
-export const { initialize, newMessage, selectConversation,
+export const { initialize, selectConversation,
                newConversation, leaveConversation } = messagingSlice.actions;
 
 export default messagingSlice.reducer;

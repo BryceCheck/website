@@ -6,9 +6,9 @@
 *    Schultz Technologies messaging service.
 ********************************************************************************/
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, ListGroup, Col, Stack } from 'react-bootstrap';
+import { Card, ListGroup, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faArrowLeft, faArrowRight,
          faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -19,35 +19,32 @@ import './Sidebar.css';
 
 function SidebarContactListItem(props) {
 
+  const currConvo = useSelector(state => state.messaging.selectedConvo);
+  const convoId = useSelector(state => state.messaging.conversations.find(convo => convo.sid === props.sid));
+  const [convo, setConvo] = useState(null);
+  const [isRead, setIsRead] = useState(true);
   const dispatch = useDispatch();
+
+  // Get the conversation on component mount
+  useEffect(() => {
+    props.client.current.getConversationBySid(props.sid)
+    .then(convo => {
+      convo.on("messageAdded", msg => {
+        if(currConvo !== props.sid) setIsRead(false);
+      });
+    });
+  }, []);
 
   return (
     <ListGroup.Item className="convo-selection" onClick={() => {
       dispatch(selectConversation({sid: props.sid}));
+      setIsRead(true);
     }}>
       <Col>
-        <div className='sidebar-initials-label'>
+        <div className='sidebar-initials-label' style={{fontWeight: isRead ? 'normal' : 'bold'}}>
           {props.initials}
         </div>
       </Col>
-      { props.collapsed ? <>
-        <Col>
-          <Stack>
-            <div className='sidebar-phone-number'>
-              {props.number}
-            </div>
-            <div className='sidebar-message-preview'>
-              {props.messages[props.messages.length - 1]}
-            </div>
-          </Stack>
-        </Col>
-        <Col>
-          <div className="sidebar-message-time">
-            {props.messages[props.messages.length - 1].timestamp}
-          </div>
-        </Col>
-      </>
-      : <></>}
     </ListGroup.Item>
   );
 }
@@ -90,7 +87,8 @@ function Sidebar(props) {
             return <SidebarContactListItem
               initials={initials}
               collapsed={collapsed}
-              messages={convo.messages}
+              convo={convo}
+              client={props.client}
               sid={convo.sid}
               key={convo.sid}
             />;

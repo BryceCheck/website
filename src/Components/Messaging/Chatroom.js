@@ -72,7 +72,7 @@ function Chatroom(props) {
     <Container fluid className='messaging-container'>
       <Row xs='2'>
         <Col xs='4' md='2'>
-          <Sidebar/>
+          <Sidebar client={client}/>
         </Col>
         <Col xs='8' md='10'>
           <Conversation client={client}/>
