@@ -14,7 +14,7 @@ import { faCircleXmark, faPaperclip, faPaperPlane,
          faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
-import { selectConversation, newConversation } from '../../Reducers/messagingReducer';
+import { selectConversation, newConversation, setMessages } from '../../Reducers/messagingReducer';
 import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH } from '../../consts';
 
@@ -32,10 +32,17 @@ function Conversation(props) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [chatTypeIcon, setChatTypeIcon] = useState(null);
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
+  const messages = useSelector(state => {
+    return state.messaging.currentMessages.map(msg => {
+      if (msg.type === 'media') {
+        return <img src={msg.url} alt='Media Message Format not allwed' key={msg.key} className={msg.style}/>;
+      } else {
+        return <div className={msg.style} key={msg.key}>{msg.body}</div>;
+      }
+    })
+  });
   const dispatch = useDispatch();
 
   // Handles checking file for extensions, size, formatting and sets status message if needed
@@ -90,12 +97,10 @@ function Conversation(props) {
 
   // An effect to get the right conversation once props or convoData change
   useEffect(() => {
-    console.log('rendering messages in conversation');
     if (props.client.current === null || convoData === null) {
-      setMessages([]);
+      dispatch(setMessages([]));
       setConvo(null);
     } else {
-      console.log(convoData.sid);
       props.client.current.getConversationBySid(convoData.sid)
       .then(convo => {
         setConvo(convo);
@@ -129,7 +134,7 @@ function Conversation(props) {
           }
         })
         const classNames = msgPaginator.items.map(msg => {
-          return msg.author === 'schultz' ? outboundMsg : inboundMsg;
+          return msg.author === 'schultz' ? [outboundMsg, msg.state.sid] : [inboundMsg, msg.state.sid];
         });
         return Promise.all([...msgs, ...classNames]);
       })
@@ -140,38 +145,20 @@ function Conversation(props) {
           const msg = msgs[i];
           const msgClass = msgs[classNamesIdx + i];
           if (typeof(msg) === 'string' && ![inboundMsg, outboundMsg].includes(msg)) {
-            msgDivs.push(<img src={msg} alt='msg not displayed' className={msgClass + ' media-message'}/>);
+            const styleClass = msgClass[0] + ' media-message';
+            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass});
           } else {
-            msgDivs.push(<div className={msgClass}>{msg.body}</div>);
+            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body});
           }
         }
-        setMessages(msgDivs);
+        dispatch(setMessages(msgDivs));
       });
     }
     fetchMessages();
-    if(!convo) return;
-    convo.on('messageAdded', msg => {
-      processNewMessage(msg);
-    });
     if(message) {
       sendMessage();
     }
   }, [convo]);
-
-  const processNewMessage = (msg) => {
-    const msgClass = msg.author === 'schultz' ? outboundMsg : inboundMsg;
-    if (msg.type === 'media') {
-      // Get the url and display the img div
-      msg.media.getContentTemporaryUrl()
-      .then(url => {
-        const imgTag = <img src={url} alt='Media Message Format not allwed' className={msgClass + ' media-message'}/>
-        setMessages((msgs) => [...msgs, imgTag]);
-      });
-    } else {
-      const msgJsx = <div className={msgClass}>{msg.body}</div>;
-      setMessages((msgs) => [...msgs, msgJsx]);
-    }
-  }
 
   const sendMessage = () => {
     if(convo === null) return;
@@ -233,13 +220,6 @@ function Conversation(props) {
                   friendlyName: destination,
                   uniqueName:   destination
                 })
-              })
-              // Add the messages listener and join the conversation
-              .then(convo => {
-                convo.on('messageAdded', msg => {
-                  processNewMessage(msg);
-                });
-                return convo.join();
               })
               .then(convo => {
                 // Do error checking to make sure the phone number is valid

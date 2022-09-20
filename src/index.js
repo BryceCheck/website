@@ -14,13 +14,11 @@ import './index.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={store}>
-    <React.StrictMode>
-      <Router>
-        <Routes>
-          <Route path='/' element={<Resume/>}/>
-          <Route path='/messages' element={<Chatroom/>}/>
-        </Routes>
-      </Router>
-    </React.StrictMode>
+    <Router>
+      <Routes>
+        <Route path='/' element={<Resume/>}/>
+        <Route path='/messages' element={<Chatroom/>}/>
+      </Routes>
+    </Router>
   </Provider>
 );

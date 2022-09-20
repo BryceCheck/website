@@ -14,6 +14,7 @@ export const messagingSlice = createSlice({
   initialState: {
     selectedConvo: null,
     conversations: [],
+    currentMessages: []
   },
   reducers: {
     initialize: (state, action) => {
@@ -22,6 +23,18 @@ export const messagingSlice = createSlice({
     },
     selectConversation: (state, action) => {
       state.selectedConvo = action.payload;
+    },
+    leaveConversation: (state, action) => {
+      state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
+    },
+    setMessages: (state, action) => {
+      state.currentMessages = action.payload;
+    },
+    addMessage: (state, action) => {
+      state.currentMessages.push(action.payload);
+    },
+    setMessageToUnread: (state, action) => {
+      state.conversations.find(convo => convo.sid === action.payload).isRead = false;
     },
     newConversation: (state, action) => {
       for(var i = 0; i < state.conversations.length; i++) {
@@ -32,14 +45,10 @@ export const messagingSlice = createSlice({
       }
       state.conversations.push(action.payload);
       state.selectedConvo = action.payload;
-    },
-    leaveConversation: (state, action) => {
-      state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
     }
   }
 });
 
-export const { initialize, selectConversation,
-               newConversation, leaveConversation } = messagingSlice.actions;
+export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, setMessageToUnread } = messagingSlice.actions;
 
 export default messagingSlice.reducer;

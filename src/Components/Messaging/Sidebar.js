@@ -6,7 +6,7 @@
 *    Schultz Technologies messaging service.
 ********************************************************************************/
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, ListGroup, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,28 +19,14 @@ import './Sidebar.css';
 
 function SidebarContactListItem(props) {
 
-  const currConvo = useSelector(state => state.messaging.selectedConvo);
-  const [convo, setConvo] = useState(null);
-  const [isRead, setIsRead] = useState(true);
+  const currConvoId = useSelector(state => state.messaging.selectedConvo ? state.messaging.selectedConvo.sid : null);
+  const isRead = useSelector(state => state.selectedConvo ? state.selectedConvo.isRead : true);
   const dispatch = useDispatch();
-
-  const updateSidebar = (msg) => {
-    if(msg.title !== 'schultz' && currConvo.sid !== props.sid) setIsRead(false);
-  }
-
-  // Get the conversation on component mount
-  useEffect(() => {
-    props.client.current.getConversationBySid(props.sid)
-    .then(convo => {
-      convo.on("messageAdded", updateSidebar);
-    });
-  }, []);
 
   return (
     <ListGroup.Item className="convo-selection" onClick={() => {
-      if (props.sid !== currConvo.sid) {
+      if (props.sid !== currConvoId) {
         dispatch(selectConversation({title: props.initials, sid: props.sid}));
-        setIsRead(true);
       }
     }}>
       <Col>

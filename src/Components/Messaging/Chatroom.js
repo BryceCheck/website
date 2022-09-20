@@ -6,24 +6,43 @@
 **********************************************************************/
 
 import { useEffect, useRef } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {Container, Row, Col} from 'react-bootstrap';
 import { Client as ConversationsClient } from '@twilio/conversations';
 
 import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
-import { HOST, API_PORT } from '../../consts';
+import { HOST, API_PORT, OUTBOUND_MSG, INBOUND_MSG } from '../../consts';
 
-import { initialize, newConversation, leaveConversation } from '../../Reducers/messagingReducer';
+import { initialize, newConversation, leaveConversation, addMessage } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
 
 function Chatroom(props) {
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
+  const selectedConvo = useSelector(state => state.messaging.selectedConvo);
   const client = useRef(null);
+  const selectedConvoRef = useRef(null);
+  selectedConvoRef.current = selectedConvo;
   const dispatch = useDispatch();
+
+  // callback used to dispatch new messages if the message is to the current conversation
+  const msgCallback = (msg, selectedConvo) => {
+    if(msg.conversation.sid !== selectedConvo.sid) return;
+    const msgClass = msg.author === 'schultz' ? OUTBOUND_MSG : INBOUND_MSG;
+    if (msg.type === 'media') {
+        // Get the url and display the img div
+        msg.media.getContentTemporaryUrl()
+        .then(url => {
+          const styleClass = msgClass + ' media-message';
+          dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass}));
+        });
+    } else {
+      dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid}));
+    }
+  }
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
@@ -49,6 +68,9 @@ function Chatroom(props) {
         const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};
         dispatch(leaveConversation(convoData));
       });
+      client.current.on("messageAdded", msg => {
+        msgCallback(msg, selectedConvoRef.current);
+      })
       return client.current.getSubscribedConversations();
     })
     .then(convos => {
@@ -60,7 +82,8 @@ function Chatroom(props) {
       const convoData = convos.items.map(convo => {
         return {
           sid: convo.sid,
-          title: convo.friendlyName ? convo.friendlyName : ''
+          title: convo.friendlyName ? convo.friendlyName : '',
+          isRead: true
         };
       });
       dispatch(initialize(convoData));
