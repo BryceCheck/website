@@ -15,7 +15,7 @@ import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 import { HOST, API_PORT, OUTBOUND_MSG, INBOUND_MSG } from '../../consts';
 
-import { initialize, newConversation, leaveConversation, addMessage } from '../../Reducers/messagingReducer';
+import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
 
@@ -30,18 +30,22 @@ function Chatroom(props) {
 
   // callback used to dispatch new messages if the message is to the current conversation
   const msgCallback = (msg, selectedConvo) => {
-    if(msg.conversation.sid !== selectedConvo.sid) return;
-    const msgClass = msg.author === 'schultz' ? OUTBOUND_MSG : INBOUND_MSG;
-    if (msg.type === 'media') {
-        // Get the url and display the img div
-        msg.media.getContentTemporaryUrl()
-        .then(url => {
-          const styleClass = msgClass + ' media-message';
-          dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass}));
-        });
+    if(msg.conversation.sid === selectedConvo.sid) {
+      const msgClass = msg.author === 'schultz' ? OUTBOUND_MSG : INBOUND_MSG;
+      if (msg.type === 'media') {
+          // Get the url and display the img div
+          msg.media.getContentTemporaryUrl()
+          .then(url => {
+            const styleClass = msgClass + ' media-message';
+            dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass, convoId: msg.conversation.sid}));
+          });
+      } else {
+        dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid, convoId: msg.conversation.sid}));
+      }
     } else {
-      dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid}));
+      dispatch(setMessageToUnread(msg.conversation.sid));
     }
+    
   }
 
   // When the comonent mounts, retrieve a backend token

@@ -20,13 +20,21 @@ import './Sidebar.css';
 function SidebarContactListItem(props) {
 
   const currConvoId = useSelector(state => state.messaging.selectedConvo ? state.messaging.selectedConvo.sid : null);
-  const isRead = useSelector(state => state.selectedConvo ? state.selectedConvo.isRead : true);
+  const isRead = useSelector(state => {
+    const isConvoRead = state.messaging.conversations ? state.messaging.conversations.find(convo => convo.sid === props.sid).isRead : true;
+    const isCurrentConvo = currConvoId === props.sid;
+    if(isCurrentConvo) {
+      return true;
+    } else {
+      return isConvoRead;
+    }
+  });
   const dispatch = useDispatch();
 
   return (
     <ListGroup.Item className="convo-selection" onClick={() => {
       if (props.sid !== currConvoId) {
-        dispatch(selectConversation({title: props.initials, sid: props.sid}));
+        dispatch(selectConversation({title: props.initials, sid: props.sid, isRead: true}));
       }
     }}>
       <Col>
@@ -76,8 +84,6 @@ function Sidebar(props) {
             return <SidebarContactListItem
               initials={initials}
               collapsed={collapsed}
-              convo={convo}
-              client={props.client}
               sid={convo.sid}
               key={convo.sid}
             />;

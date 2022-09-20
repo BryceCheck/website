@@ -7,7 +7,7 @@
 *    update and behave correctly.
 **********************************************************************************/
 
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, current } from '@reduxjs/toolkit';
 
 export const messagingSlice = createSlice({
   name: 'messaging',
@@ -23,6 +23,7 @@ export const messagingSlice = createSlice({
     },
     selectConversation: (state, action) => {
       state.selectedConvo = action.payload;
+      state.conversations.find(convo => convo.sid === action.payload.sid).isRead = true;
     },
     leaveConversation: (state, action) => {
       state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
@@ -32,6 +33,10 @@ export const messagingSlice = createSlice({
     },
     addMessage: (state, action) => {
       state.currentMessages.push(action.payload);
+      console.log(current(state.selectedConvo.sid), action.payload.convoId);
+      if (state.selectedConvo.sid !== action.payload.convoId) {
+        state.conversations.find(convo => convo.sid === action.payload.convoId).isRead = false;
+      }
     },
     setMessageToUnread: (state, action) => {
       state.conversations.find(convo => convo.sid === action.payload).isRead = false;
