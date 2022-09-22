@@ -14,36 +14,85 @@ import { faCircleXmark, faPaperclip, faPaperPlane,
          faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
-import { selectConversation, newConversation, setMessages } from '../../Reducers/messagingReducer';
+import { selectConversation, newConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
 import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
-         MAX_MESSAGE_LENGTH } from '../../consts';
+         MAX_MESSAGE_LENGTH, 
+         OUTBOUND_MSG,
+         INBOUND_MSG,
+         MESSAGE_BLOCK_SIZE} from '../../consts';
 
 import './Conversation.css';
-
-const inboundMsg = 'inbound-message';
-const outboundMsg = 'outbound-message';
 
 function Conversation(props) {
 
   const destinationRef = useRef(null);
   const fileUploadRef = useRef(null);
+  const lastElementRef = useRef(null);
   const [title, setTitle] = useState(null);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
+  const [firstMessageIndex, setFirstMessageIndex] = useState(30);
+  const [messagesInConvo, setMessagesInConvo] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
   const [message, setMessage] = useState('');
   const [convo, setConvo] = useState(null);
   const convoData = useSelector(state => state.messaging.selectedConvo);
   const messages = useSelector(state => {
-    return state.messaging.currentMessages.map(msg => {
+    const msgs = [];
+    for (var i = 0; i < state.messaging.currentMessages.length; i++) {
+      const msg = state.messaging.currentMessages[i];
+      const ref = i === state.messaging.currentMessages.length - 1 ? lastElementRef : null;
       if (msg.type === 'media') {
-        return <img src={msg.url} alt='Media Message Format not allwed' key={msg.key} className={msg.style}/>;
+        msgs.push(<img src={msg.url} alt='Media Message Format not allwed' key={msg.key} className={msg.style} ref={lastElementRef}/>);
       } else {
-        return <div className={msg.style} key={msg.key}>{msg.body}</div>;
+        msgs.push(<div className={msg.style} key={msg.key} ref={lastElementRef}>{msg.body}</div>);
       }
-    })
+    }
+    return msgs;
   });
   const dispatch = useDispatch();
+
+  // used to handle logic of fetching previous messages if they exist
+  const detectScrollToTopOfMessages = (e) => {
+    const top = e.target.scrollTop === 0;
+    if(firstMessageIndex === messagesInConvo) return;
+    if (top) {
+      convo.getMessages(MESSAGE_BLOCK_SIZE, 0, 'forward')
+      .then(paginator => {
+        const msgs = [];
+        for (var i = 0; i < paginator.items.length; i++) {
+          const msg = paginator.items[i];
+          if (msg.type === 'media') {
+            msgs.push(msg.media.getContentTemporaryUrl());
+          } else {
+            msgs.push(msg);
+          }
+        }
+        console.log('current messages:', messages);
+        console.log('loaded messages:', msgs);
+        // const classNames = paginator.items.map(msg => {
+        //   return msg.author === 'schultz' ? [OUTBOUND_MSG, msg.state.sid] : [INBOUND_MSG, msg.state.sid];
+        // });
+        // return Promise.all([...msgs, ...classNames]);
+      })
+      // .then(msgs => {
+      //   const msgDivs = [];
+      //   const classNamesIdx = msgs.length / 2;
+      //   for(var i = 0; i < msgs.length / 2; i++) {
+      //     const msg = msgs[i];
+      //     const msgClass = msgs[classNamesIdx + i];
+      //     if (typeof(msg) === 'string' && ![INBOUND_MSG, OUTBOUND_MSG].includes(msg)) {
+      //       const styleClass = msgClass[0] + ' media-message';
+      //       msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass});
+      //     } else {
+      //       msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body});
+      //     }
+      //   }
+      //   dispatch(addPreviousMessages(msgDivs));
+      //   setFirstMessageIndex(firstMessageIndex + msgDivs.length);
+      // });
+    }
+  }
 
   // Handles checking file for extensions, size, formatting and sets status message if needed
   const checkFile = (file) => {
@@ -65,6 +114,27 @@ function Conversation(props) {
       return false;
     }
     return true;
+  }
+
+  const sendMessage = () => {
+    // If the convo is null then this is a new message to a new conversation
+    if(convo === null) return;
+    console.log('sending message to:', convo);
+    // Check the length of the message
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
+    } else {
+      convo.sendMessage(message);
+    }
+    setMessage('');
+    // Send the media message if it exists message
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    convo.sendMessage(formData);
+    // Reset the state
+    setSelectedFile(null);
+    fileUploadRef.current.value = null;
   }
 
   useEffect(() => {
@@ -122,6 +192,11 @@ function Conversation(props) {
         const destination = participants.find(participant => participant.type !== 'chat');
         const newTitle = destination ? destination.state.bindings.sms.address : newDestination;
         setTitle(newTitle);
+        return convo.getMessagesCount();
+      })
+      // Get the number of messages in the convo
+      .then(numberOfMessages => {
+        setMessagesInConvo(numberOfMessages);
         return convo.getMessages();
       })
       // Get the messages
@@ -134,7 +209,7 @@ function Conversation(props) {
           }
         })
         const classNames = msgPaginator.items.map(msg => {
-          return msg.author === 'schultz' ? [outboundMsg, msg.state.sid] : [inboundMsg, msg.state.sid];
+          return msg.author === 'schultz' ? [OUTBOUND_MSG, msg.state.sid, msg.state.index] : [INBOUND_MSG, msg.state.sid, msg.state.index];
         });
         return Promise.all([...msgs, ...classNames]);
       })
@@ -144,11 +219,11 @@ function Conversation(props) {
         for(var i = 0; i < msgs.length / 2; i++) {
           const msg = msgs[i];
           const msgClass = msgs[classNamesIdx + i];
-          if (typeof(msg) === 'string' && ![inboundMsg, outboundMsg].includes(msg)) {
+          if (typeof(msg) === 'string' && ![INBOUND_MSG, OUTBOUND_MSG].includes(msg)) {
             const styleClass = msgClass[0] + ' media-message';
-            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass});
+            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass, idx: msgClass[2]});
           } else {
-            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body});
+            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body, idx: msgClass[2]});
           }
         }
         dispatch(setMessages(msgDivs));
@@ -160,24 +235,10 @@ function Conversation(props) {
     }
   }, [convo]);
 
-  const sendMessage = () => {
-    if(convo === null) return;
-    // Check the length of the message
-    if (message.length > MAX_MESSAGE_LENGTH) {
-      setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
-    } else {
-      convo.sendMessage(message);
-    }
-    setMessage('');
-    // Send the media message if it exists message
-    if (!selectedFile) return;
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    convo.sendMessage(formData);
-    // Reset the state
-    setSelectedFile(null);
-    fileUploadRef.current.value = null;
-  }
+  useEffect(() => {
+    if(!lastElementRef.current) return;
+    lastElementRef.current.scrollIntoView({behavior: 'smooth', block: 'end'});
+  }, [messages])
 
   return (
     <Card className='convo-holder'>
@@ -198,7 +259,7 @@ function Conversation(props) {
         </div>
       </Card.Header>
       <Card.Body>
-        <div className='msg-holder'>
+        <div className='msg-holder' onScroll={detectScrollToTopOfMessages}>
           {/* Display all the messages in the conversation for each party */}
           {messages ? messages : <div className='convo-holder'>No messages sent yet...</div>}
         </div>
@@ -209,6 +270,7 @@ function Conversation(props) {
           <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
             if (convo === null) {
+              console.log('creating new convo');
               const destination = destinationRef.current.value;
               //Check to see if the conversation already exists
               props.client.current.getConversationByUniqueName(destination)
@@ -216,17 +278,25 @@ function Conversation(props) {
                 return convo;
               // If the conversation isn't found, create a new one
               }, _ => {
+                console.log('sending new convo request');
                 return props.client.current.createConversation({
                   friendlyName: destination,
                   uniqueName:   destination
                 })
               })
               .then(convo => {
+                console.log('adding chat participant');
+                convo.join();
+                return convo;
+              })
+              .then(convo => {
+                console.log('adding chat participant');
                 // Do error checking to make sure the phone number is valid
                 convo.addNonChatParticipant(TWILIO_NUMBER, destination);
                 return convo;
               })
               .then(convo => {
+                console.log('sending message');
                 sendMessage();
                 const convoData = {sid: convo.sid, title: destination};
                 dispatch(newConversation(convoData));

@@ -7,7 +7,7 @@
 *    update and behave correctly.
 **********************************************************************************/
 
-import { createSlice, current } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 export const messagingSlice = createSlice({
   name: 'messaging',
@@ -23,6 +23,7 @@ export const messagingSlice = createSlice({
     },
     selectConversation: (state, action) => {
       state.selectedConvo = action.payload;
+      if(action.payload === null) return;
       state.conversations.find(convo => convo.sid === action.payload.sid).isRead = true;
     },
     leaveConversation: (state, action) => {
@@ -33,10 +34,12 @@ export const messagingSlice = createSlice({
     },
     addMessage: (state, action) => {
       state.currentMessages.push(action.payload);
-      console.log(current(state.selectedConvo.sid), action.payload.convoId);
       if (state.selectedConvo.sid !== action.payload.convoId) {
         state.conversations.find(convo => convo.sid === action.payload.convoId).isRead = false;
       }
+    },
+    addPreviousMessages: (state, action) => {
+      state.currentMessages = [...action.payload, ...state.currentMessages];
     },
     setMessageToUnread: (state, action) => {
       state.conversations.find(convo => convo.sid === action.payload).isRead = false;
@@ -54,6 +57,6 @@ export const messagingSlice = createSlice({
   }
 });
 
-export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, setMessageToUnread } = messagingSlice.actions;
+export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, setMessageToUnread, addPreviousMessages } = messagingSlice.actions;
 
 export default messagingSlice.reducer;

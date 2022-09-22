@@ -44,8 +44,7 @@ function Chatroom(props) {
       }
     } else {
       dispatch(setMessageToUnread(msg.conversation.sid));
-    }
-    
+    } 
   }
 
   // When the comonent mounts, retrieve a backend token
