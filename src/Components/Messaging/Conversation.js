@@ -30,12 +30,14 @@ function Conversation(props) {
   const lastElementRef = useRef(null);
   const [title, setTitle] = useState(null);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
-  const [firstMessageIndex, setFirstMessageIndex] = useState(30);
-  const [messagesInConvo, setMessagesInConvo] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
   const [message, setMessage] = useState('');
   const [convo, setConvo] = useState(null);
+  const lastMessageIndex = useSelector(state => {
+    const empty = state.messaging.currentMessages.length === 0;
+    return !empty ? state.messaging.currentMessages[0].idx : 0;
+  });
   const convoData = useSelector(state => state.messaging.selectedConvo);
   const messages = useSelector(state => {
     const msgs = [];
@@ -55,42 +57,44 @@ function Conversation(props) {
   // used to handle logic of fetching previous messages if they exist
   const detectScrollToTopOfMessages = (e) => {
     const top = e.target.scrollTop === 0;
-    if(firstMessageIndex === messagesInConvo) return;
     if (top) {
-      convo.getMessages(MESSAGE_BLOCK_SIZE, 0, 'forward')
+      // Retrieve the last MESSAGE_BLOCK_SIZE messages from Twilio
+      convo.getMessages(MESSAGE_BLOCK_SIZE, lastMessageIndex, 'backwards')
       .then(paginator => {
-        const msgs = [];
-        for (var i = 0; i < paginator.items.length; i++) {
-          const msg = paginator.items[i];
+        // Omit the last message as it is the current first message
+        var items = paginator.items.slice(0, paginator.items.length - 1);
+        var msgs = [];
+        for (var i = 0; i < items.length; i++) {
+          const msg = items[i];
           if (msg.type === 'media') {
             msgs.push(msg.media.getContentTemporaryUrl());
           } else {
             msgs.push(msg);
           }
         }
-        console.log('current messages:', messages);
-        console.log('loaded messages:', msgs);
-        // const classNames = paginator.items.map(msg => {
-        //   return msg.author === 'schultz' ? [OUTBOUND_MSG, msg.state.sid] : [INBOUND_MSG, msg.state.sid];
-        // });
-        // return Promise.all([...msgs, ...classNames]);
+        // pass along the metadata needed in the next step
+        const classNames = items.map(msg => {
+          return msg.author === 'schultz' ? [OUTBOUND_MSG, msg.state.sid, msg.state.index] : [INBOUND_MSG, msg.state.sid, msg.state.index];
+        });
+        return Promise.all([...msgs, ...classNames]);
       })
-      // .then(msgs => {
-      //   const msgDivs = [];
-      //   const classNamesIdx = msgs.length / 2;
-      //   for(var i = 0; i < msgs.length / 2; i++) {
-      //     const msg = msgs[i];
-      //     const msgClass = msgs[classNamesIdx + i];
-      //     if (typeof(msg) === 'string' && ![INBOUND_MSG, OUTBOUND_MSG].includes(msg)) {
-      //       const styleClass = msgClass[0] + ' media-message';
-      //       msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass});
-      //     } else {
-      //       msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body});
-      //     }
-      //   }
-      //   dispatch(addPreviousMessages(msgDivs));
-      //   setFirstMessageIndex(firstMessageIndex + msgDivs.length);
-      // });
+      // Compile media and text message data together and dispatch them to the redux store
+      .then(msgs => {
+        const msgDivs = [];
+        const classNamesIdx = msgs.length / 2;
+        for(var i = 0; i < msgs.length / 2; i++) {
+          const msg = msgs[i];
+          const msgClass = msgs[classNamesIdx + i];
+          if (typeof(msg) === 'string' && ![INBOUND_MSG, OUTBOUND_MSG].includes(msg)) {
+            const styleClass = msgClass[0] + ' media-message';
+            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: styleClass, idx: msgClass[2]});
+          } else {
+            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body, idx: msgClass[2]});
+          }
+        }
+        console.log('dispatching previous messages:', msgDivs);
+        dispatch(addPreviousMessages(msgDivs));
+      });
     }
   }
 
@@ -119,11 +123,11 @@ function Conversation(props) {
   const sendMessage = () => {
     // If the convo is null then this is a new message to a new conversation
     if(convo === null) return;
-    console.log('sending message to:', convo);
+    console.log('sending the message');
     // Check the length of the message
     if (message.length > MAX_MESSAGE_LENGTH) {
       setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
-    } else {
+    } else if (message.length !== 0) {
       convo.sendMessage(message);
     }
     setMessage('');
@@ -192,14 +196,9 @@ function Conversation(props) {
         const destination = participants.find(participant => participant.type !== 'chat');
         const newTitle = destination ? destination.state.bindings.sms.address : newDestination;
         setTitle(newTitle);
-        return convo.getMessagesCount();
-      })
-      // Get the number of messages in the convo
-      .then(numberOfMessages => {
-        setMessagesInConvo(numberOfMessages);
         return convo.getMessages();
       })
-      // Get the messages
+      // Get the message metadata needed to make the divs
       .then(msgPaginator => {
         const msgs = msgPaginator.items.map(msg => {
           if (msg.type === 'media') {
@@ -211,8 +210,10 @@ function Conversation(props) {
         const classNames = msgPaginator.items.map(msg => {
           return msg.author === 'schultz' ? [OUTBOUND_MSG, msg.state.sid, msg.state.index] : [INBOUND_MSG, msg.state.sid, msg.state.index];
         });
+        // Must return as promises to get the callback urls to display the media messages
         return Promise.all([...msgs, ...classNames]);
       })
+      // Create and dispatch the current messages objects needed to create the react components to display
       .then(msgs => {
         const msgDivs = [];
         const classNamesIdx = msgs.length / 2;
@@ -270,7 +271,6 @@ function Conversation(props) {
           <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
             if (convo === null) {
-              console.log('creating new convo');
               const destination = destinationRef.current.value;
               //Check to see if the conversation already exists
               props.client.current.getConversationByUniqueName(destination)
@@ -278,25 +278,21 @@ function Conversation(props) {
                 return convo;
               // If the conversation isn't found, create a new one
               }, _ => {
-                console.log('sending new convo request');
                 return props.client.current.createConversation({
                   friendlyName: destination,
                   uniqueName:   destination
                 })
               })
               .then(convo => {
-                console.log('adding chat participant');
                 convo.join();
                 return convo;
               })
               .then(convo => {
-                console.log('adding chat participant');
                 // Do error checking to make sure the phone number is valid
                 convo.addNonChatParticipant(TWILIO_NUMBER, destination);
                 return convo;
               })
               .then(convo => {
-                console.log('sending message');
                 sendMessage();
                 const convoData = {sid: convo.sid, title: destination};
                 dispatch(newConversation(convoData));
