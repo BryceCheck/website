@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { 
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from 'react-router-dom';
 import { Provider } from 'react-redux';
 
 import store from './store';
@@ -16,8 +20,8 @@ root.render(
   <Provider store={store}>
     <Router>
       <Routes>
-        <Route path='/' element={<Resume/>}/>
-        <Route path='/messages' element={<Chatroom/>}/>
+        <Route exact path="/" element={<Resume/>}/>
+        <Route path="/messages" element={<Chatroom/>}/>
       </Routes>
     </Router>
   </Provider>

@@ -43,7 +43,6 @@ function Conversation(props) {
     const msgs = [];
     for (var i = 0; i < state.messaging.currentMessages.length; i++) {
       const msg = state.messaging.currentMessages[i];
-      const ref = i === state.messaging.currentMessages.length - 1 ? lastElementRef : null;
       if (msg.type === 'media') {
         msgs.push(<img src={msg.url} alt='Media Message Format not allwed' key={msg.key} className={msg.style} ref={lastElementRef}/>);
       } else {
@@ -92,7 +91,6 @@ function Conversation(props) {
             msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body, idx: msgClass[2]});
           }
         }
-        console.log('dispatching previous messages:', msgDivs);
         dispatch(addPreviousMessages(msgDivs));
       });
     }

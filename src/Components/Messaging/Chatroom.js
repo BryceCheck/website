@@ -13,7 +13,7 @@ import { Client as ConversationsClient } from '@twilio/conversations';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
-import { HOST, API_PORT, OUTBOUND_MSG, INBOUND_MSG } from '../../consts';
+import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT } from '../../consts';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
@@ -49,7 +49,7 @@ function Chatroom(props) {
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
-    const tokenURL = HOST + ':' + API_PORT + '/access-token';
+    const tokenURL = HOST + TOKEN_ENDPOINT;
     fetch(tokenURL, {
       mode: 'cors',
       headers: {
