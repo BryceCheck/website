@@ -13,13 +13,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark, faPaperclip, faPaperPlane,
          faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import axios from 'axios';
 
 import { selectConversation, newConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
-import { TWILIO_NUMBER, MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
+import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH, 
          OUTBOUND_MSG,
          INBOUND_MSG,
-         MESSAGE_BLOCK_SIZE} from '../../consts';
+         MESSAGE_BLOCK_SIZE,
+         HOST} from '../../consts';
 
 import './Conversation.css';
 
@@ -121,7 +123,6 @@ function Conversation(props) {
   const sendMessage = () => {
     // If the convo is null then this is a new message to a new conversation
     if(convo === null) return;
-    console.log('sending the message');
     // Check the length of the message
     if (message.length > MAX_MESSAGE_LENGTH) {
       setConversationStatusMessage('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
@@ -271,27 +272,13 @@ function Conversation(props) {
             if (convo === null) {
               const destination = destinationRef.current.value;
               //Check to see if the conversation already exists
-              props.client.current.getConversationByUniqueName(destination)
+              console.log(destination);
+              axios.post(HOST + '/join-convo', {destination:destination})
+              .then(res => props.client.current.getConversationBySid(res.data.sid))
+              .then(newConvo => newConvo.join(),
+                _ => setConversationStatusMessage('Error occurred while trying to create conversation to: ' + destination))
               .then(convo => {
-                return convo;
-              // If the conversation isn't found, create a new one
-              }, _ => {
-                return props.client.current.createConversation({
-                  friendlyName: destination,
-                  uniqueName:   destination
-                })
-              })
-              .then(convo => {
-                convo.join();
-                return convo;
-              })
-              .then(convo => {
-                // Do error checking to make sure the phone number is valid
-                convo.addNonChatParticipant(TWILIO_NUMBER, destination);
-                return convo;
-              })
-              .then(convo => {
-                sendMessage();
+                console.log(convo);
                 const convoData = {sid: convo.sid, title: destination};
                 dispatch(newConversation(convoData));
               })
