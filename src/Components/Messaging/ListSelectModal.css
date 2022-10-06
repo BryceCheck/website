@@ -1,0 +1,8 @@
+.rep-list-item {
+    cursor: pointer;
+}
+
+.rep-list-item:hover {
+    background-color: cornflowerblue;
+    color: white;
+}

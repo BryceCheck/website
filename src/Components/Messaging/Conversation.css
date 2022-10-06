@@ -8,7 +8,13 @@ button {
   max-height: 100%;
 }
 
-.convo-leave-button {
+.convo-action-button-container {
+  display: flex;
+  justify-content: space-between;
+  width: 9%;
+}
+
+.convo-leave-button, .convo-delete-button, .convo-share-button {
   border-radius: 5px;
   background-color: cornflowerblue;
   color: white;
@@ -17,7 +23,7 @@ button {
 .convo-type-container {
   display: flex;
   justify-content: space-between;
-  width: 15%;
+  width: 9%;
   align-items: center;
 }
 
@@ -59,12 +65,11 @@ button {
 }
 
 .outbound-message {
+  margin-left: auto;
   background-color: cornflowerblue;
 }
 
 .inbound-message {
-  margin-left: auto;
-  align-text: right;
   background-color: grey;
 }
 
@@ -152,5 +157,5 @@ button {
 }
 
 .conversation-img-delete-button:hover {
-  pointer: cursor;
+  cursor: pointer;
 }

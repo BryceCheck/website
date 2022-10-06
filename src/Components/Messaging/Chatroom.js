@@ -3,26 +3,33 @@
 * File: Chatroom.js
 * Desc: Chatroom page for messaging between clients in a web platform
 *    that has a collapsable sidebar and a chat area.
+*
+* TODO:
+* - Create a semi-transparent error message display for whole-app
+*   errors
 **********************************************************************/
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {Container, Row, Col} from 'react-bootstrap';
+import {Container, Row, Col, Modal} from 'react-bootstrap';
 import { Client as ConversationsClient } from '@twilio/conversations';
 
 import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
+import { useGetCurrentUser } from './Hooks';
 import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT } from '../../consts';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
 
+
 function Chatroom(props) {
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
   const selectedConvo = useSelector(state => state.messaging.selectedConvo);
+  const curUser = useGetCurrentUser()
   const client = useRef(null);
   const selectedConvoRef = useRef(null);
   selectedConvoRef.current = selectedConvo;
@@ -31,14 +38,17 @@ function Chatroom(props) {
   // callback used to dispatch new messages if the message is to the current conversation
   const msgCallback = (msg, selectedConvo) => {
     if(msg.conversation.sid === selectedConvo.sid) {
-      const msgClass = msg.author === 'schultz' ? OUTBOUND_MSG : INBOUND_MSG;
+      const msgClass = msg.author === curUser.id ? OUTBOUND_MSG : INBOUND_MSG;
       if (msg.type === 'media') {
           // Get the url and display the img div
           msg.media.getContentTemporaryUrl()
-          .then(url => {
-            const styleClass = msgClass + ' media-message';
-            dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass, convoId: msg.conversation.sid}));
-          });
+          .then(
+            url => {
+              const styleClass = msgClass + ' media-message';
+              dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass, convoId: msg.conversation.sid}));
+            },
+          )
+          .catch(console.error);
       } else {
         dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid, convoId: msg.conversation.sid}));
       }
@@ -64,7 +74,7 @@ function Chatroom(props) {
       var newClient = new ConversationsClient(data.accessToken);
       client.current = newClient;
       client.current.on("conversationJoined", convo => {
-        const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};
+        const convoData = {sid: convo.sid, title: convo.uniqueName ? convo.uniqueName : ''};
         dispatch(newConversation(convoData));
       });
       client.current.on("conversationLeft", convo => {
@@ -77,23 +87,19 @@ function Chatroom(props) {
       return client.current.getSubscribedConversations();
     })
     .then(convos => {
-      for(var i = 0; i < convos.items.length; i++) {
-        if (convos.items[i].channelState.status === 'notParticipating') {
-          convos.items[i].delete();
-        }
-      }
       const convoData = convos.items.map(convo => {
         return {
           sid: convo.sid,
-          title: convo.friendlyName ? convo.friendlyName : '',
+          title: convo.uniqueName ? convo.uniqueName : '',
           isRead: true
         };
       });
       dispatch(initialize(convoData));
-    });
+    })
+    .catch(console.error);
   }, []);
 
-  return (<div className='chatroom-page'>
+  return (<>
     <Navbar/>
     <Container fluid className='messaging-container'>
       <Row xs='2'>
@@ -105,7 +111,7 @@ function Chatroom(props) {
         </Col>
       </Row>
     </Container>
-  </div>);
+  </>);
 }
 
 export default Chatroom;

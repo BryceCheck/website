@@ -72,6 +72,7 @@ function Sidebar(props) {
         </Card.Title>
         <ListGroup>
           {conversations.map(convo => {
+            console.log('getting display title for:', convo);
             var initials;
             const names = convo.title.split();
             if (names.length === 1) {

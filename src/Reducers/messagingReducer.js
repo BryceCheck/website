@@ -28,6 +28,8 @@ export const messagingSlice = createSlice({
     },
     leaveConversation: (state, action) => {
       state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
+      // find the next conversation which isn't the one we're deleting
+      state.selectedConvo = state.conversations > 1 ? state.conversations.find(convo => convo.sid !== action.payload.sid) : null;
     },
     setMessages: (state, action) => {
       state.currentMessages = action.payload;
