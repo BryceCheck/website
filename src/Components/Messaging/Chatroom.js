@@ -11,7 +11,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {Container, Row, Col, Modal} from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Client as ConversationsClient } from '@twilio/conversations';
 
 import Navbar from '../Navbar/Navbar';
@@ -31,14 +31,17 @@ function Chatroom(props) {
   const selectedConvo = useSelector(state => state.messaging.selectedConvo);
   const curUser = useGetCurrentUser()
   const client = useRef(null);
+  const currUserRef = useRef(null);
   const selectedConvoRef = useRef(null);
   selectedConvoRef.current = selectedConvo;
+  currUserRef.current = curUser;
   const dispatch = useDispatch();
 
   // callback used to dispatch new messages if the message is to the current conversation
   const msgCallback = (msg, selectedConvo) => {
     if(msg.conversation.sid === selectedConvo.sid) {
-      const msgClass = msg.author === curUser.id ? OUTBOUND_MSG : INBOUND_MSG;
+      console.log('curUser, msg.author:', currUserRef.current, msg.author);
+      const msgClass = msg.author === currUserRef.current.id ? OUTBOUND_MSG : INBOUND_MSG;
       if (msg.type === 'media') {
           // Get the url and display the img div
           msg.media.getContentTemporaryUrl()
