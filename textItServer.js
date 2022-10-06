@@ -110,6 +110,7 @@ app.post('/join-convo', (req, res) => {
 });
 
 app.post('/transfer-conversation', (req, res) => {
+  console.log(req.body);
   // Get the auth string
   getAuthorizationHeaderString(req.oidc.accessToken)
   // Create authenticated request

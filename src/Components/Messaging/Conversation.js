@@ -35,7 +35,7 @@ import './Conversation.css';
 import { useGetCurrentUser } from './Hooks';
 
 // Joins existing conversation or creates new one if no conversation between client and customer exists already
-const joinConversation = (destination, client, dispatch, setStatus) => {
+const joinConversation = (destination, client, setStatus) => {
   // Check to see if the conversation already exists
   axios.post(HOST + '/join-convo', {destination:destination})
   // Join the conversation on the backend
@@ -44,12 +44,19 @@ const joinConversation = (destination, client, dispatch, setStatus) => {
       if (res.status < 200 || res.status >= 300) {
         throw(new Error(`Bad status from join-convo request: ${res.status}`));
       } else {
-        return client.getConversationBySid(res.data.sid);
+        return client.peekConversationBySid(res.data.sid);
       }
     },
     err => {
       setStatus(`Error occured while requesting to join the conversation with: ${destination}`);
-      console.log(err.Error());
+      console.log(err);
+    }
+  )
+  .then(
+    convo => convo.join(),
+    err => {
+      setStatus('Error occurred while retrieving conversation data');
+      console.error(err);
     }
   )
   .catch(console.error);
@@ -57,9 +64,25 @@ const joinConversation = (destination, client, dispatch, setStatus) => {
 
 // Share the conversation with a different user and leave
 const shareConversation = (convo, dispatch, setDisplay) => {
-  return (identity, setStatus) => {
+  return (identity, setStatus, currUser) => {
+    // Find the twilioId of the current user
+    console.log(identity);
+    convo.getParticipants().then(
+      participants => {
+        const currParticipant = participants.find(participant => {
+          console.log(participant.identity, currUser);
+          return participant.identity === currUser.id;
+        });
+        console.log(currParticipant);
+        return currParticipant.sid;
+      },
+      err => console.error('Could not get conversation participants:', err)
+    )
     // Request the backend to transfer the conversation
-    axios.post(HOST + '/transfer-conversation', {convoId: convo.sid, identity: identity})
+    .then(
+      sid => axios.post(HOST + '/transfer-conversation', {convoId: convo.sid, identity: identity, currUserTwilioId: sid}),
+      err => console.error('Could not get current user twilio ID:', err)
+    )
     .then(
       // Leave the conversation
       res => {
@@ -78,7 +101,7 @@ const shareConversation = (convo, dispatch, setDisplay) => {
       },
       err => {
         setStatus('Error occurred while transferring the conversation!');
-        console.log(err.Error());
+        console.log(err);
       })
     .catch(console.error);
   }
@@ -357,7 +380,7 @@ function Conversation(props) {
           <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
             if (convo === null) {
-              joinConversation(destinationRef.current.value, props.client.current, dispatch, setConversationStatusMessage);
+              joinConversation(destinationRef.current.value, props.client.current, setConversationStatusMessage);
             } else {
               sendMessage(convo, message, selectedFile, setConversationStatusMessage, setMessage, setSelectedFile, fileUploadRef.current);
             }

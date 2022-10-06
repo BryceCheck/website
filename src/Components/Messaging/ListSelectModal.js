@@ -5,29 +5,26 @@ import axios from "axios";
 import { HOST } from "../../consts";
     
 import './ListSelectModal.css';
+import { useGetCurrentUser } from "./Hooks";
 
 const ListSelectModal = (props) => {
 
   const [repList, setRepList] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const currUser = useGetCurrentUser();
 
   // Refresh the list of reps everytime the display is turned on, clear it when it's turned off
   useEffect(() => {
     // Only update the list when the display is turned on
-    Promise.all([axios.get(HOST + '/online-reps'), axios.get(HOST + '/user-info')])
+    axios.get(HOST + '/online-reps')
     .then(
-      vals => {
-        setRepList(vals[0].data.onlineReps.filter(rep => rep.id !== vals[1].data.userInfo.id).map(item => {
+      res => {
+        setRepList(res.data.onlineReps.filter(rep => rep.id !== currUser.id).map(item => {
           return <div 
               className='rep-list-item' 
               key={item.id} 
-              // style={{
-              //   color: (selectedRecipient && selectedRecipient.id === currentUser.id) ? primaryColor : accentColor,
-              //   backgroundColor: (selectedRecipient && selectedRecipient.id === currentUser.id) ? accentColor : primaryColor
-              // }}
               onClick={() => {
-                console.log(item.id);
                 setSelectedRecipient(item.id)
               }}
             >
@@ -36,13 +33,13 @@ const ListSelectModal = (props) => {
         }));
       },
       err => {
-        console.log(err.Error());
+        console.log(err);
         setStatusMessage('Error occured while getting online reps!');
       }
     ).catch(console.error);
 
     return () => {setRepList([])};
-  }, []);
+  }, [currUser]);
   
   return <Modal show={props.display} onHide={props.setParentDisplay} centered className='textit-modal'>
     <Modal.Header closeButton centered>
@@ -53,7 +50,7 @@ const ListSelectModal = (props) => {
       {repList}
     </Modal.Body>
     <Modal.Footer centered>
-      <button className='accept-button' onClick={() => props.handleAccept(selectedRecipient.identity, setStatusMessage)}>
+      <button className='accept-button' onClick={() => props.handleAccept(selectedRecipient, setStatusMessage, currUser)}>
         Share
       </button>
     </Modal.Footer>
