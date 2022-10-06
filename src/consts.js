@@ -1,7 +1,6 @@
 export const TWILIO_NUMBER = '+17245586932';
 // Endpoints and URL/I's
-export const HOST = 'http://brycecheck.com'
-export const API_PORT = 3001;
+export const HOST = 'https://brycecheck.com';
 export const TOKEN_ENDPOINT = '/token';
 // Message classes
 export const INBOUND_MSG = 'inbound-message';

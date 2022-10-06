@@ -1,11 +1,13 @@
 const express = require('express');
+const fs = require('fs');
+const https = require('https');
 const path = require('path');
 const dotenv = require('dotenv').config();
 const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 
-const HOST = 'http://brycecheck.com';
+const HOST = 'https://brycecheck.com';
 const API_PORT = 3001;
 const TWILIO_NUMBER = '+17245586932';
 const GET = 'get';
@@ -42,12 +44,19 @@ const getAuthenticatedRequest = (url, authString, method, data, customConfig) =>
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
+// Redirect all non-http requests to port 443
+app.use(function(req, res, next) {
+  if (!req.secure) {
+     return res.redirect("https://" + req.headers.host + req.url);
+  }
+  next();
+})
 // auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
-
 // attaches the build path items to the server
 app.use(express.static(path.join(__dirname, 'build')));
+// Serves the assets directory
+app.use('/assets', express.static(path.join(__dirname, 'src/Assets')));
 
 // gets a token from the backend
 app.get('/token', async (req, res) => {
@@ -127,4 +136,18 @@ app.get(['/', '/messages'], (req, res) => {
     req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
 });
 
-app.listen(80);
+// Create the configuration options for keys, certs, etc for the https server
+const options = {
+  key: fs.readFileSync(process.env.KEY_LOC),
+  cert: fs.readFileSync(process.env.CERT_LOC)
+}
+// Create the https server
+const httpsServer = https.createServer(options, app).listen(443);
+
+// Create a server listening on 80 to redirect to https @443
+const redirectApp = express();
+redirectApp.use('/', (req, res, next) => {
+  console.log('redirecting:', req.headers.host + req.url);
+  res.redirect("https://" + req.headers.host + req.url)
+});
+redirectApp.listen(80);
