@@ -8,8 +8,8 @@ function Navbar(props) {
         <Container fluid>
           <Row>
             <Col><div className='nav-link-text'><a className='nav-bar-link' href='/'>Home</a></div></Col>
-            <Col><div className='nav-link-text'><a className='nav-bar-link' href='/future'>Future</a></div></Col>
-            <Col><div className='nav-link-text'><a className='nav-bar-link' href='/shop'>Shop</a></div></Col>
+            <Col><div className='nav-link-text'><a className='nav-bar-link' href='/messages'>Messages</a></div></Col>
+            <Col><div className='nav-link-text'><a className='nav-bar-link' href='/profile'>Profile</a></div></Col>
           </Row>
         </Container>
       </div>

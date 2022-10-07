@@ -13,6 +13,7 @@ import Chatroom from './Components/Messaging/Chatroom';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
+import Profile from './Components/Messaging/Profile';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -22,6 +23,7 @@ root.render(
       <Routes>
         <Route exact path="/" element={<Resume/>}/>
         <Route path="/messages" element={<Chatroom/>}/>
+        <Route path="/profile" element={<Profile/>}/>
       </Routes>
     </Router>
   </Provider>

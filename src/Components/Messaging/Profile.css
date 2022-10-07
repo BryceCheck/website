@@ -1,0 +1,29 @@
+.profile-container {
+    padding: 50px 0;
+}
+
+.profile-pic {
+    width: 300px;
+    padding-bottom: 30px;
+}
+
+.profile-body-container {
+    padding-top: 30px;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-attribute-table {
+    padding-bottom: 30px;
+}
+
+.individual-attribute {
+    padding: 0 20px;
+    text-align: left;
+}
+
+.bold {
+    font-weight: bold;
+}
+

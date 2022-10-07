@@ -82,15 +82,40 @@ app.get('/token', async (req, res) => {
 
 // gets the user info from the oidc token
 app.get('/user-info', (req, res) => {
+  // Get the role/permissions information from the DB
   res.json({userInfo: {
-    id: req.oidc.user.email
-  }})
+    firstName: req.oidc.user.given_name,
+    lastName: req.oidc.user.family_name,
+    email: req.oidc.user.email,
+    // These will all be requested from the DB, once implemented
+    role: req.oidc.user.email === 'bryceacheck@gmail.com' ? 'Admin' : 'User',
+    org: 'Schultz Technologies',
+    id: req.oidc.user.email // will be switched to a UUID once DB's are implemented
+  }});
 });
 
-// Gets the online reps from the backend server
+// Gets all the reps from the database server per org
+app.get('/reps', (req, res) => {
+  // Get the auth string
+  getAuthorizationHeaderString(req.oidc.accessToken)
+  // Query the API for reps in the org
+  .then(
+    authStr => getAuthenticatedRequest(HOST + ':' + API_PORT + `/reps?id=${req.oidc.user.email}`, authStr, GET),
+    err => res.sendStatus(401)
+  )
+  // Return the reps
+  .then(
+    response => {
+      res.json(response.data);
+    },
+    err => res.status(401)
+  )
+  .catch(console.error);
+})
+
+// Gets the online reps from the backend server per Org
 app.get('/online-reps', (req, res) => {
   // Get the auth string for the API
-
   getAuthorizationHeaderString(req.oidc.accessToken)
   // Query the API for the online reps
   .then(
@@ -136,7 +161,7 @@ app.post('/transfer-conversation', (req, res) => {
 });
 
 // serves the pages
-app.get(['/', '/messages'], (req, res) => {
+app.get(['/', '/messages', '/profile'], (req, res) => {
     req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
 });
 

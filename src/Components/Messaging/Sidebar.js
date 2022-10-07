@@ -56,18 +56,21 @@ function Sidebar(props) {
     <Card>
       <Card.Body>
         <Card.Title>
-          <div className='sidebar-title'>
-            <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
-              <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
-            </button>
-            <button className='sidebar-settings-button'>
-              <FontAwesomeIcon icon={faCog}/>
-            </button>
-            <button className='sibebar-new-msg-button' onClick={() => {
-              dispatch(selectConversation(null))
-            }}>
-              <FontAwesomeIcon icon={faEdit}/>
-            </button>
+          <div className='sidebar-container'>
+            <img src='https://brycecheck.com/assets/fetchItLogo.png' alt='Profile Picture' className='logo'/>
+            <div className='sidebar-title'>
+              <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
+                <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
+              </button>
+              <button className='sidebar-settings-button'>
+                <FontAwesomeIcon icon={faCog}/>
+              </button>
+              <button className='sibebar-new-msg-button' onClick={() => {
+                dispatch(selectConversation(null))
+              }}>
+                <FontAwesomeIcon icon={faEdit}/>
+              </button>
+            </div>
           </div>
         </Card.Title>
         <ListGroup>

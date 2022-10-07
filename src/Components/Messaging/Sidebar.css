@@ -1,23 +1,30 @@
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .sidebar-title {
   width: 100%;
   display: flex;
   justify-content: center;
-}
-
-.sidebar-initials-label {
-  borer-radius: 50%;
+  padding: 15px 0;
 }
 
 .convo-selection:hover {
   cursor: pointer;
 }
 
-@media (min-width: 768px)
+.logo {
+  width: 90%;
+}
+
+@media screen (min-width: 768px)
 .container {
     max-width: 10%;
 }
 
-@media (min-width: 576px)
+@media screen (min-width: 576px)
 .container {
     max-width: 100px;
 } 
