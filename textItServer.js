@@ -6,7 +6,11 @@ const dotenv = require('dotenv').config();
 const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 const { default: axios } = require('axios');
+const { WebSocket, WebSocketServer } = require('ws');
+const socketMap = new Map();
+var ApiSocket = null;
 
+const WS_HOST = 'wss://brycecheck.com';
 const HOST = 'https://brycecheck.com';
 const API_PORT = 3001;
 const TWILIO_NUMBER = '+17245586932';
@@ -141,13 +145,42 @@ const options = {
   key: fs.readFileSync(process.env.KEY_LOC),
   cert: fs.readFileSync(process.env.CERT_LOC)
 }
-// Create the https server
-const httpsServer = https.createServer(options, app).listen(443);
 
+// Create the websocket server
+const socketServer = new WebSocketServer({ noServer: true });
+socketServer.on('connection', (ws, req) => {
+  // store the socket information by client identity
+  socketMap.set(req.oidc.user.email, ws);
+})
+
+// Create the https server
+const httpsServer = https.createServer(options, app);
+// Handle protocol upgrade requests
+httpsServer.on('upgrade', (req, socket, head) => {
+  // Make sure that that upgrade requests are authenticated as well
+  socketServer.handleUpgrade(req, socket, head, ws => {
+    socketServer.emit('connection', ws, req);
+  });
+});
+// Create a websocket client to the backend
+const ws = new WebSocket(WS_HOST + ':' + API_PORT);
+ws.on('error', (err) => {
+  console.error('Error with API websocket:', err);
+});
+ws.on('connection', () => {
+  console.log('connected to websocket server!');
+});
+ws.on('message', (data) => {
+  // Transform received text into javascript object
+  console.log(data);
+  // Find type of message
+  // Handle that type of message
+});
+httpsServer.listen(443);
 // Create a server listening on 80 to redirect to https @443
 const redirectApp = express();
 redirectApp.use('/', (req, res, next) => {
   console.log('redirecting:', req.headers.host + req.url);
-  res.redirect("https://" + req.headers.host + req.url)
+  res.redirect("https://" + req.headers.host + req.url);
 });
 redirectApp.listen(80);
