@@ -18,11 +18,12 @@ import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 import { useGetCurrentUser } from './Hooks';
-import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT } from '../../consts';
+import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT, WSS_HOST } from '../../consts';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
+
 
 
 function Chatroom(props) {
@@ -33,6 +34,7 @@ function Chatroom(props) {
   const client = useRef(null);
   const currUserRef = useRef(null);
   const selectedConvoRef = useRef(null);
+  const socketRef = useRef(null);
   selectedConvoRef.current = selectedConvo;
   currUserRef.current = curUser;
   const dispatch = useDispatch();
@@ -101,6 +103,24 @@ function Chatroom(props) {
     })
     .catch(console.error);
   }, []);
+
+  // Create a websocket to the frontend server
+  useEffect(() => {
+    if(!curUser.id) return;
+    // Create a websocket
+    const ws = new WebSocket(WSS_HOST + `?id=${curUser.id}`);
+    // Attach the handlers
+    ws.addEventListener('message', msg => {
+      // Handle the message
+      console.log(msg);
+    })
+    ws.addEventListener('open', () => {
+      console.log('socket to frontend server opened!');
+    })
+    ws.addEventListener('close', () => {
+      console.log('socket to frontend server closed');
+    })
+  }, [curUser]);
 
   return (<>
     <Navbar/>

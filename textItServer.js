@@ -150,7 +150,9 @@ const options = {
 const socketServer = new WebSocketServer({ noServer: true });
 socketServer.on('connection', (ws, req) => {
   // store the socket information by client identity
-  socketMap.set(req.oidc.user.email, ws);
+  const id = req.url.split('?')[1].split('=')[1];
+  socketMap.set(id, ws);
+  console.log('connected to websocket with client id:', id);
 })
 
 // Create the https server
@@ -172,7 +174,7 @@ ws.on('connection', () => {
 });
 ws.on('message', (data) => {
   // Transform received text into javascript object
-  console.log(data);
+  console.log('data received:', data);
   // Find type of message
   // Handle that type of message
 });
