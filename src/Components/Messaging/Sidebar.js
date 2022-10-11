@@ -7,6 +7,7 @@
 ********************************************************************************/
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, ListGroup, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -51,18 +52,19 @@ function Sidebar(props) {
   const dispatch = useDispatch();
   const [collapsed, setCollapsed] = useState(false);
   const conversations = useSelector((state => { return state.messaging.conversations }));
+  const navigate = useNavigate();
 
   return (
     <Card>
       <Card.Body>
         <Card.Title>
           <div className='sidebar-container'>
-            <img src='https://brycecheck.com/assets/fetchItLogo.png' alt='Profile Picture' className='logo'/>
+            <img src='/fetchItLogo.png' alt='Profile Picture' className='logo'/>
             <div className='sidebar-title'>
               <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
                 <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
               </button>
-              <button className='sidebar-settings-button'>
+              <button className='sidebar-settings-button' onClick={() => navigate('/profile')}>
                 <FontAwesomeIcon icon={faCog}/>
               </button>
               <button className='sibebar-new-msg-button' onClick={() => {

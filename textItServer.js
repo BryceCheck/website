@@ -189,6 +189,7 @@ httpsServer.on('upgrade', (req, socket, head) => {
     socketServer.emit('connection', ws, req);
   });
 });
+
 // Create a websocket client to the backend
 const ws = new WebSocket(WS_HOST + ':' + API_PORT);
 ws.on('error', (err) => {
@@ -204,10 +205,10 @@ ws.on('message', (data) => {
   // Handle that type of message
 });
 httpsServer.listen(443);
+
 // Create a server listening on 80 to redirect to https @443
 const redirectApp = express();
 redirectApp.use('/', (req, res, next) => {
-  console.log('redirecting:', req.headers.host + req.url);
   res.redirect("https://" + req.headers.host + req.url);
 });
 redirectApp.listen(80);
