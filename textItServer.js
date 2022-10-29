@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 const { WebSocket, WebSocketServer } = require('ws');
+const { createUser, deleteUser, connectToAuth0, getUser } = require('./auth0-handlers');
 const socketMap = new Map();
 var ApiSocket = null;
 
@@ -82,6 +83,7 @@ app.get('/token', async (req, res) => {
 
 // gets the user info from the oidc token
 app.get('/user-info', (req, res) => {
+  console.log(req.oidc.user);
   // Get the role/permissions information from the DB
   res.json({userInfo: {
     firstName: req.oidc.user.given_name,
@@ -165,50 +167,80 @@ app.get(['/', '/messages', '/profile'], (req, res) => {
     req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
 });
 
-// Create the configuration options for keys, certs, etc for the https server
-const options = {
-  key: fs.readFileSync(process.env.KEY_LOC),
-  cert: fs.readFileSync(process.env.CERT_LOC)
+// Handles the creating a user post request
+app.post('/user', (req, res) => {
+  if(!req.body.email, !req.body.phoneNumber, !req.body.name, !req.body.role) res.status(400).send('Missing create user data');
+  // Get the orgId of the admin making the request
+  getUser(req.oidc.user.email)
+  // Send out the create user request
+  .then(
+    data => {
+      const orgId = data.app_metadata ? data.app_metadata.orgId : 'Schultz Technologies';
+      return createUser(orgId, req.body.email, req.body.phoneNumber, req.body.name, req.body.role);
+    },
+    _ => {
+      res.status(401).send('Unauthorized request to create the user')
+    }
+  )
+  .then(
+    _ => res.sendStatus(200),
+    _ => res.status(401).send('Could not create the new user')
+  )
+  .catch(err => console.error('Unhandled error:', err.response.data));
+});
+
+app.delete('/user', deleteUser);
+
+// Starts the service
+const startService = () => {
+  connectToAuth0(process.env.CLIENT_ID, process.env.CLIENT_SECRET);
+  // Create the configuration options for keys, certs, etc for the https server
+  const options = {
+    key: fs.readFileSync(process.env.KEY_LOC),
+    cert: fs.readFileSync(process.env.CERT_LOC)
+  }
+
+  // Create the websocket server
+  const socketServer = new WebSocketServer({ noServer: true });
+  socketServer.on('connection', (ws, req) => {
+    // store the socket information by client identity
+    const id = req.url.split('?')[1].split('=')[1];
+    socketMap.set(id, ws);
+    console.log('connected to websocket with client id:', id);
+  })
+
+  // Create the https server
+  const httpsServer = https.createServer(options, app);
+  // Handle protocol upgrade requests
+  httpsServer.on('upgrade', (req, socket, head) => {
+    // Make sure that that upgrade requests are authenticated as well
+    socketServer.handleUpgrade(req, socket, head, ws => {
+      socketServer.emit('connection', ws, req);
+    });
+  });
+
+  // Create a websocket client to the backend
+  const ws = new WebSocket(WS_HOST + ':' + API_PORT);
+  ws.on('error', (err) => {
+    console.error('Error with API websocket:', err);
+  });
+  ws.on('connection', () => {
+    console.log('connected to websocket server!');
+  });
+  ws.on('message', (data) => {
+    // Transform received text into javascript object
+    console.log('data received:', data);
+    // Find type of message
+    // Handle that type of message
+  });
+  httpsServer.listen(443);
+
+  // Create a server listening on 80 to redirect to https @443
+  const redirectApp = express();
+  redirectApp.use('/', (req, res, next) => {
+    res.redirect("https://" + req.headers.host + req.url);
+  });
+  redirectApp.listen(80);
 }
 
-// Create the websocket server
-const socketServer = new WebSocketServer({ noServer: true });
-socketServer.on('connection', (ws, req) => {
-  // store the socket information by client identity
-  const id = req.url.split('?')[1].split('=')[1];
-  socketMap.set(id, ws);
-  console.log('connected to websocket with client id:', id);
-})
-
-// Create the https server
-const httpsServer = https.createServer(options, app);
-// Handle protocol upgrade requests
-httpsServer.on('upgrade', (req, socket, head) => {
-  // Make sure that that upgrade requests are authenticated as well
-  socketServer.handleUpgrade(req, socket, head, ws => {
-    socketServer.emit('connection', ws, req);
-  });
-});
-
-// Create a websocket client to the backend
-const ws = new WebSocket(WS_HOST + ':' + API_PORT);
-ws.on('error', (err) => {
-  console.error('Error with API websocket:', err);
-});
-ws.on('connection', () => {
-  console.log('connected to websocket server!');
-});
-ws.on('message', (data) => {
-  // Transform received text into javascript object
-  console.log('data received:', data);
-  // Find type of message
-  // Handle that type of message
-});
-httpsServer.listen(443);
-
-// Create a server listening on 80 to redirect to https @443
-const redirectApp = express();
-redirectApp.use('/', (req, res, next) => {
-  res.redirect("https://" + req.headers.host + req.url);
-});
-redirectApp.listen(80);
+startService();
