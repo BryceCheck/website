@@ -63,11 +63,17 @@ const createUser = (orgId, email, number, name, role) => {
     // if the password change request ticket fails, delete the user
     err => {
       console.error('Error while sending out password change ticket:', err);
-      axios.delete(MANAGEMENT_API_URL + 'users/' + userId, getAuthHeader());
+      deleteUser(userId);
       throw err;
     }
   )
 }
+
+// Logout a user
+const logoutUser = () => axios.get(APP_URL + `/v2/logout?client_id=${process.env.CLIENT_ID}&returnTo=https://google.com`);
+
+// Delete a user
+const deleteUser = (userId) => axios.delete(MANAGEMENT_API_URL + 'users/' + userId, getAuthHeader());
 
 // Change a user's password
 const changePassword = (email) => {
@@ -77,16 +83,6 @@ const changePassword = (email) => {
     "connection": process.env.AUTH0_USER_DB
   }
   return axios.post(APP_URL + '/dbconnections/change_password', pwChangeTicketData, getAuthHeader())
-}
-  
-// Delete a user
-const deleteUser = (userId) => {
-  if(!userId) res.sendStatus(400);
-  axios.delete(MANAGEMENT_API_URL + 'users/' + userId, getAuthHeader())
-  .then(
-    _ => res.sendStatus(200),
-    _ => res.sendstatus(401)
-  );
 }
 
 // Get a user's roles
@@ -128,6 +124,7 @@ const getUser = (email) => {
 module.exports = { 
   connectToAuth0, 
   createUser, 
+  logoutUser,
   deleteUser,
   getUserRoles,
   getUser

@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 const { WebSocket, WebSocketServer } = require('ws');
-const { createUser, deleteUser, connectToAuth0, getUser } = require('./auth0-handlers');
+const { createUser, deleteUser, connectToAuth0, getUser, logoutUser } = require('./auth0-handlers');
 const socketMap = new Map();
 var ApiSocket = null;
 
@@ -193,6 +193,8 @@ app.post('/user', (req, res) => {
   )
   .catch(err => console.error('Unhandled error:', err));
 });
+
+app.get('/logout-user', logoutUser);
 
 app.delete('/user', deleteUser);
 
