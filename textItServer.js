@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const { auth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 const { WebSocket, WebSocketServer } = require('ws');
-const { createUser, deleteUser, connectToAuth0, getUser, logoutUser } = require('./auth0-handlers');
+const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInOrg } = require('./auth0-handlers');
 const socketMap = new Map();
 var ApiSocket = null;
 
@@ -119,19 +119,32 @@ app.get('/reps', (req, res) => {
 
 // Gets the online reps from the backend server per Org
 app.get('/online-reps', (req, res) => {
-  // Get the auth string for the API
-  getAuthorizationHeaderString(req.oidc.accessToken)
-  // Query the API for the online reps
+  // Get the current logged in user information
+  getUser(req.oidc.user.email)
+  // Find all reps in the organization of the same user
   .then(
-    authStr => getAuthenticatedRequest(HOST + ':' + API_PORT + `/online-reps?id=${req.oidc.user.email}`, authStr, GET),
-    response => res.sendStatus(response.status))
-  // Return the list of online reps to the client
+    userData => getUsersInOrg(userData[0].app_metadata.orgId),
+    err => {
+      console.error('Error while getting users in org:', err);
+      res.sendStatus(400);
+    }
+  )
+  // Send back the users in the org
   .then(
-    // Successful retrieval of online reps
-    backendRes => res.json(backendRes.data), 
-    // Failure to retrieve online reps
-    backendRes => res.sendStatus(backendRes.status)
-  );
+    usersInOrg => {
+      const users = usersInOrg.map(user => {
+        return {
+          id: user.email,
+          name: user.name
+        };
+      });
+      res.send({onlineReps: users});
+    },
+    err => {
+      console.error('Error while retrieiving users in org:', err);
+      res.sendStatus(400);
+    }
+  )
 });
 
 // joins or makes conversations which already exist

@@ -118,6 +118,19 @@ const getUser = (email) => {
   )
 }
 
+// Get users in organization
+const getUsersInOrg = (orgId) => {
+  const qString = `app_metadata.orgId:"${orgId}"`;
+  return axios.get(MANAGEMENT_API_URL + `users?q=${qString}`, getAuthHeader())
+  .then(
+    res => res.data,
+    err => {
+      console.error('Error while getting users in org:', err);
+      throw err;
+    }
+  )
+}
+
 // Add a role to a user
 // Remove a user's role
 
@@ -127,5 +140,6 @@ module.exports = {
   logoutUser,
   deleteUser,
   getUserRoles,
-  getUser
+  getUser,
+  getUsersInOrg
 };
