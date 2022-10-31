@@ -55,7 +55,6 @@ const Profile = (props) => {
   }
 
   const handleSendInvite = (e) => {
-    console.log('sending invite');
     var emptyFieldExists = false;
     // Make sure that all the data is there
     for (const [key, val] of Object.entries(errors)) if (val !== '') return;
@@ -67,7 +66,6 @@ const Profile = (props) => {
       }
     }
     if(emptyFieldExists) return;
-    console.log('no empty fields');
     // post to the /users endpoint
     axios.post('/user', inviteInfo)
     // handle the response or errors
@@ -91,8 +89,6 @@ const Profile = (props) => {
         // Transform the json array of reps into table rows
         setRepRows(res.data.reps.map(rep => {
           // Make sure to only list the members who aren't logged in
-          console.log(rep.email, userInfo.id);
-          if (rep.email === userInfo.id) return;
           return <tr>
             <td>{rep.name}</td>
             <td>{rep.email}</td>
@@ -102,14 +98,14 @@ const Profile = (props) => {
       },  
       err => console.error('Error while getting org reps:', err)
     );
-  }, [userInfo])
+  }, [userInfo]);
 
   return (<>
     <Navbar/>
     <Container className='profile-container'>
       <Card>
         <Card.Header className='text-center'>
-          <h2>Hello, {userInfo.firstName}!</h2>
+          <h2>Hello, {userInfo.firstName ? userInfo.firstName : userInfo.name}!</h2>
         </Card.Header>
         <Card.Body className='text-center'>
           <div className='profile-body-container text-center'>
@@ -125,30 +121,32 @@ const Profile = (props) => {
                 <td className='individual-attribute bold'>Org</td><td className='individual-attribute'>{userInfo.org}</td>
               </tr>
             </table>
-            <div className='bold table-break'>New User Input Form</div>
-            <table>
-              <tr>
-                <td className='individual-attribute bold'>Email</td>
-                <td className='individual-attriubte'><input type='email' value={inviteInfo.email} onChange={handleEmailChange}/></td>
-              </tr>
-              <tr>
-                <td className='individual-attribute bold'>Phone Number</td>
-                <td className='individual-attriubte'><input value={inviteInfo.number} onChange={handleNumberChange}/></td>
-              </tr>
-              <tr>
-                <td className='individual-attribute bold'>Name</td>
-                <td className='individual-attriubte'><input value={inviteInfo.name} onChange={handleNameChange}/></td>
-              </tr>
-              <tr>
-                <td className='individual-attribute bold'>Role</td>
-                <td className='individual-attriubte'>
-                  <select value={inviteInfo.role} onChange={(e) => handleStateChange(InputFields.ROLE, e.target.value)}>
-                    <option>Admin</option>
-                    <option>User</option>
-                  </select>
-                </td>
-              </tr>
-            </table>
+            { userInfo.role === RoleOptions.ADMIN ? <>
+              <div className='bold table-break'>New User Input Form</div>
+              <table>
+                <tr>
+                  <td className='individual-attribute bold'>Email</td>
+                  <td className='individual-attriubte'><input type='email' value={inviteInfo.email} onChange={handleEmailChange}/></td>
+                </tr>
+                <tr>
+                  <td className='individual-attribute bold'>Phone Number</td>
+                  <td className='individual-attriubte'><input value={inviteInfo.number} onChange={handleNumberChange}/></td>
+                </tr>
+                <tr>
+                  <td className='individual-attribute bold'>Name</td>
+                  <td className='individual-attriubte'><input value={inviteInfo.name} onChange={handleNameChange}/></td>
+                </tr>
+                <tr>
+                  <td className='individual-attribute bold'>Role</td>
+                  <td className='individual-attriubte'>
+                    <select value={inviteInfo.role} onChange={(e) => handleStateChange(InputFields.ROLE, e.target.value)}>
+                      <option>Admin</option>
+                      <option>User</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></> : <></>
+            }
             <button className='invite-button' onClick={handleSendInvite}>Invite User</button>
             <Table striped hover fixed>
               <thead>

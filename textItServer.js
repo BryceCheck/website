@@ -86,35 +86,51 @@ app.get('/token', async (req, res) => {
 
 // gets the user info from the oidc token
 app.get('/user-info', (req, res) => {
-  // Get the role/permissions information from the DB
-  res.json({userInfo: {
-    firstName: req.oidc.user.given_name,
-    lastName: req.oidc.user.family_name,
-    email: req.oidc.user.email,
-    // These will all be requested from the DB, once implemented
-    role: req.oidc.user.email === 'bryceacheck@gmail.com' ? 'Admin' : 'User',
-    org: 'Schultz Technologies',
-    id: req.oidc.user.email // will be switched to a UUID once DB's are implemented
-  }});
+  // Get the role of the current user
+  getUser(req.oidc.user.email)
+  .then(
+    response => {
+      // return just the needed information to the front end
+      res.json({userInfo: {
+        name: req.oidc.user.name,
+        firstName: req.oidc.user.given_name,
+        lastName: req.oidc.user.family_name,
+        email: req.oidc.user.email,
+        role: response[0].user_metadata.role,
+        org: 'Schultz Technologies',
+        id: req.oidc.user.email // will be switched to a UUID once DB's are implemented
+      }});
+    }
+  )
+  .catch(err => console.error('unhandled error while getting user-info:', err));
 });
 
 // Gets all the reps from the database server per org
 app.get('/reps', (req, res) => {
-  // Get the auth string
-  getAuthorizationHeaderString(req.oidc.accessToken)
-  // Query the API for reps in the org
+  // Get the current user org
+  getUser(req.oidc.user.email)
+  // Get all the users in the organization
   .then(
-    authStr => getAuthenticatedRequest(HOST + ':' + API_PORT + `/reps?id=${req.oidc.user.email}`, authStr, GET),
-    err => res.sendStatus(401)
+    userData => getUsersInOrg(userData[0].app_metadata.orgId),
+    err => {
+      console.error('Error while retrieving the reps in the org:', err);
+      res.send(400);
+    }
   )
-  // Return the reps
+  // Return the users in the org
   .then(
-    response => {
-      res.json(response.data);
-    },
-    err => res.status(401)
+    usersInOrg => res.send({reps: usersInOrg.map(user => {
+      return {
+        name: user.name,
+        email: user.email,
+        role: user.user_metadata.role
+      }
+    })}),
+    err => {
+      console.error('Error while getting users in org:', err);
+      res.send(400);
+    }
   )
-  .catch(console.error);
 })
 
 // Gets the online reps from the backend server per Org
