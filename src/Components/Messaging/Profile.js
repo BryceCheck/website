@@ -28,6 +28,7 @@ const Profile = (props) => {
   const [inviteInfo, setInviteInfo] = useState({email: '', number: '', name: '', role: RoleOptions.USER});
   const [repRows, setRepRows] = useState([]);
   const [errors, setErrors] = useState({email: '', number: '', name: '', role: ''});
+  const [showModal, setShowModal] = useState(false);
 
   const handleEmailChange = (e) => {
     handleStateChange(InputFields.EMAIL, e.target.value)
@@ -121,33 +122,12 @@ const Profile = (props) => {
                 <td className='individual-attribute bold'>Org</td><td className='individual-attribute'>{userInfo.org}</td>
               </tr>
             </table>
-            { userInfo.role === RoleOptions.ADMIN ? <>
-              <div className='bold table-break'>New User Input Form</div>
-              <table>
-                <tr>
-                  <td className='individual-attribute bold'>Email</td>
-                  <td className='individual-attriubte'><input type='email' value={inviteInfo.email} onChange={handleEmailChange}/></td>
-                </tr>
-                <tr>
-                  <td className='individual-attribute bold'>Phone Number</td>
-                  <td className='individual-attriubte'><input value={inviteInfo.number} onChange={handleNumberChange}/></td>
-                </tr>
-                <tr>
-                  <td className='individual-attribute bold'>Name</td>
-                  <td className='individual-attriubte'><input value={inviteInfo.name} onChange={handleNameChange}/></td>
-                </tr>
-                <tr>
-                  <td className='individual-attribute bold'>Role</td>
-                  <td className='individual-attriubte'>
-                    <select value={inviteInfo.role} onChange={(e) => handleStateChange(InputFields.ROLE, e.target.value)}>
-                      <option>Admin</option>
-                      <option>User</option>
-                    </select>
-                  </td>
-                </tr>
-              </table></> : <></>
-            }
-            <button className='invite-button' onClick={handleSendInvite}>Invite User</button>
+            { userInfo.role === RoleOptions.ADMIN
+              ? <div className='table-break'>
+                  <button onClick={() => setShowModal(true)} className="invite-button">Invite User</button>
+                </div>
+              : <></>
+            }            
             <Table striped hover fixed>
               <thead>
                 <tr>
@@ -164,6 +144,39 @@ const Profile = (props) => {
         </Card.Body>
       </Card>
     </Container>
+    <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal.Header style={{justifyContent: 'center'}}>
+        <h1>New User Input Form</h1>
+      </Modal.Header>
+      <Modal.Body style={{justifyContent: 'center'}}>
+        <table className='centered-table'>
+          <tr>
+            <td className='individual-attribute bold'>Email</td>
+            <td className='individual-attriubte'><input type='email' value={inviteInfo.email} onChange={handleEmailChange}/></td>
+          </tr>
+          <tr>
+            <td className='individual-attribute bold'>Phone Number</td>
+            <td className='individual-attriubte'><input value={inviteInfo.number} onChange={handleNumberChange}/></td>
+          </tr>
+          <tr>
+            <td className='individual-attribute bold'>Name</td>
+            <td className='individual-attriubte'><input value={inviteInfo.name} onChange={handleNameChange}/></td>
+          </tr>
+          <tr>
+            <td className='individual-attribute bold'>Role</td>
+            <td className='individual-attriubte'>
+              <select value={inviteInfo.role} onChange={(e) => handleStateChange(InputFields.ROLE, e.target.value)}>
+                <option>Admin</option>
+                <option>User</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+      </Modal.Body>
+      <Modal.Footer style={{justifyContent: 'center'}}>
+        <button className='invite-button' onClick={handleSendInvite}>Send Invite</button>
+      </Modal.Footer>
+    </Modal>
   </>);
 }
 

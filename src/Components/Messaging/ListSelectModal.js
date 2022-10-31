@@ -42,14 +42,14 @@ const ListSelectModal = (props) => {
   }, [currUser]);
   
   return <Modal show={props.display} onHide={props.setParentDisplay} centered className='textit-modal'>
-    <Modal.Header closeButton centered>
+    <Modal.Header closeButton>
       <h1>Transfer Conversation</h1>
     </Modal.Header>
     <Modal.Body centered>
       <div className='modal-status-container'>{statusMessage}</div>
       {repList}
     </Modal.Body>
-    <Modal.Footer centered>
+    <Modal.Footer style={{justifyContent: 'center'}}>
       <button className='accept-button' onClick={() => props.handleAccept(selectedRecipient, setStatusMessage, currUser)}>
         Share
       </button>

@@ -1,5 +1,6 @@
 .rep-list-item {
     cursor: pointer;
+    text-align: center;
 }
 
 .rep-list-item:hover {
