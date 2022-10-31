@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const cors = require('cors');
 const https = require('https');
 const path = require('path');
 const dotenv = require('dotenv').config();
@@ -58,6 +59,8 @@ app.use(function(req, res, next) {
 })
 // auth router attaches /login, /logout, and /callback routes to the baseURL
 app.use(auth(config));
+// Allow this server to reach out to the auth server
+app.use(cors());
 // attaches the build path items to the server
 app.use(express.static(path.join(__dirname, 'build')));
 // Serves the assets directory
@@ -83,7 +86,6 @@ app.get('/token', async (req, res) => {
 
 // gets the user info from the oidc token
 app.get('/user-info', (req, res) => {
-  console.log(req.oidc.user);
   // Get the role/permissions information from the DB
   res.json({userInfo: {
     firstName: req.oidc.user.given_name,
@@ -183,10 +185,13 @@ app.post('/user', (req, res) => {
     }
   )
   .then(
-    _ => res.sendStatus(200),
-    _ => res.status(401).send('Could not create the new user')
+    _ => res.status(200),
+    err => {
+      res.status(401).send('Could not create the new user')
+      console.error(err);
+    }
   )
-  .catch(err => console.error('Unhandled error:', err.response.data));
+  .catch(err => console.error('Unhandled error:', err));
 });
 
 app.delete('/user', deleteUser);

@@ -1,6 +1,7 @@
 const axios = require('axios');
 
-const MANAGEMENT_API_URL = 'https://schultzcustomers.us.auth0.com/api/v2/';
+const APP_URL = 'https://schultzcustomers.us.auth0.com';
+const MANAGEMENT_API_URL = APP_URL + '/api/v2/';
 const DEFAULT_PW = 'TextIt123!';
 var auth0AccessToken = '';
 
@@ -26,11 +27,14 @@ const connectToAuth0 = (id, secret) => {
   
 // Create a user
 const createUser = (orgId, email, number, name, role) => {
+  var userId = '';
   // Create an unverified user
   const userData = {
     "email": email,
-    "phone_number": number,
     "email_verified": false,
+    "verify_email": false,
+    "phone_number": number,
+    "email_verified": true,
     "user_metadata": {
       role: role
     },
@@ -39,7 +43,6 @@ const createUser = (orgId, email, number, name, role) => {
     },
     "name": name,
     "connection": process.env.AUTH0_USER_DB,
-    "verify_email": false,
     "password": DEFAULT_PW
   }
   // Send out the request to the api
@@ -47,32 +50,33 @@ const createUser = (orgId, email, number, name, role) => {
   .then(
     // If successful then send out a password change request
     res => {
-      console.log('user successfully created:', res);
-      userId = res.user_id;
-      const pwChangeTicketData = {
-        "result_url": "http:/" + process.env.APP_URL + "/callback",
-        "user_id": userId,
-        "connection_id": process.env.AUTH0_DB_ID,
-        "mark_email_as_verified": true,
-        "includeEmailInRedirect": true,
-        "email": email
-      }
-      return axios.post(MANAGEMENT_API_URL + 'tickets/password-change', pwChangeTicketData, getAuthHeader())
+      userId = res.data.user_id;
+      return changePassword(email);
     },
     err => {
-      console.error(err.response.data);
+      console.error('Request to create user failed:', err);
       throw err;
     }
   )
   .then(
-    _ => {},
+    _ => {console.log('successfully sent out password reset')},
     // if the password change request ticket fails, delete the user
     err => {
-      console.error('Error while sending out password change ticket', err.response.data);
+      console.error('Error while sending out password change ticket:', err);
       axios.delete(MANAGEMENT_API_URL + 'users/' + userId, getAuthHeader());
       throw err;
     }
   )
+}
+
+// Change a user's password
+const changePassword = (email) => {
+  const pwChangeTicketData = {
+    "client_id": process.env.CLIENT_ID,
+    "email": email,
+    "connection": process.env.AUTH0_USER_DB
+  }
+  return axios.post(APP_URL + '/dbconnections/change_password', pwChangeTicketData, getAuthHeader())
 }
   
 // Delete a user
