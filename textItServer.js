@@ -5,7 +5,7 @@ const https = require('https');
 const path = require('path');
 const dotenv = require('dotenv').config();
 const bodyParser = require('body-parser');
-const { auth } = require('express-openid-connect');
+const { auth, requiresAuth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 const { WebSocket, WebSocketServer } = require('ws');
 const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInOrg } = require('./auth0-handlers');
@@ -21,7 +21,7 @@ const POST = 'post';
 
 // Authentication configuration
 const config = {
-  authRequired: true,
+  authRequired: false,
   auth0Logout: true,
   secret: process.env.CLIENT_SECRET,
   baseURL: process.env.BASE_URL,
@@ -63,11 +63,9 @@ app.use(auth(config));
 app.use(cors());
 // attaches the build path items to the server
 app.use(express.static(path.join(__dirname, 'build')));
-// Serves the assets directory
-app.use('/assets', express.static(path.join(__dirname, 'src/Assets')));
 
 // gets a token from the backend
-app.get('/token', async (req, res) => {
+app.get('/token', requiresAuth(), async (req, res) => {
   // Get the access token for the API
   getAuthorizationHeaderString(req.oidc.accessToken)
   .then(
@@ -85,7 +83,7 @@ app.get('/token', async (req, res) => {
 });
 
 // gets the user info from the oidc token
-app.get('/user-info', (req, res) => {
+app.get('/user-info', requiresAuth(), (req, res) => {
   // Get the role of the current user
   getUser(req.oidc.user.email)
   .then(
@@ -106,7 +104,7 @@ app.get('/user-info', (req, res) => {
 });
 
 // Gets all the reps from the database server per org
-app.get('/reps', (req, res) => {
+app.get('/reps', requiresAuth(), (req, res) => {
   // Get the current user org
   getUser(req.oidc.user.email)
   // Get all the users in the organization
@@ -134,7 +132,7 @@ app.get('/reps', (req, res) => {
 })
 
 // Gets the online reps from the backend server per Org
-app.get('/online-reps', (req, res) => {
+app.get('/online-reps', requiresAuth(), (req, res) => {
   // Get the current logged in user information
   getUser(req.oidc.user.email)
   // Find all reps in the organization of the same user
@@ -164,7 +162,7 @@ app.get('/online-reps', (req, res) => {
 });
 
 // joins or makes conversations which already exist
-app.post('/join-convo', (req, res) => {
+app.post('/join-convo', requiresAuth(), (req, res) => {
   // Get the auth header string
   getAuthorizationHeaderString(req.oidc.accessToken)
   // Make the request to the backend
@@ -180,7 +178,7 @@ app.post('/join-convo', (req, res) => {
     _ => res.sendStatus(401));
 });
 
-app.post('/transfer-conversation', (req, res) => {
+app.post('/transfer-conversation', requiresAuth(), (req, res) => {
   console.log(req.body);
   // Get the auth string
   getAuthorizationHeaderString(req.oidc.accessToken)
@@ -194,12 +192,15 @@ app.post('/transfer-conversation', (req, res) => {
 });
 
 // serves the pages
-app.get(['/', '/messages', '/profile'], (req, res) => {
-    req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+})
+app.get(['/messages', '/profile'], (req, res) => {
+  req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
 });
 
 // Handles the creating a user post request
-app.post('/user', (req, res) => {
+app.post('/user', requiresAuth(),(req, res) => {
   if(!req.body.email, !req.body.phoneNumber, !req.body.name, !req.body.role) res.status(400).send('Missing create user data');
   // Get the orgId of the admin making the request
   getUser(req.oidc.user.email)
@@ -223,9 +224,9 @@ app.post('/user', (req, res) => {
   .catch(err => console.error('Unhandled error:', err));
 });
 
-app.get('/logout-user', logoutUser);
+app.get('/logout-user', requiresAuth(), logoutUser);
 
-app.delete('/user', deleteUser);
+app.delete('/user', requiresAuth(), deleteUser);
 
 // Starts the service
 const startService = () => {

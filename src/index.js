@@ -8,7 +8,7 @@ import {
 import { Provider } from 'react-redux';
 
 import store from './store';
-import Resume from './Components/Resume/Resume';
+import Home from './Components/Messaging/TextItHome';
 import Chatroom from './Components/Messaging/Chatroom';
 import Profile from './Components/Messaging/Profile';
 
@@ -25,7 +25,7 @@ root.render(
     />
     <Router>
       <Routes>
-        <Route exact path="/" element={<Resume/>}/>
+        <Route exact path="/" element={<Home/>}/>
         <Route path="/messages" element={<Chatroom/>}/>
         <Route path="/profile" element={<Profile/>}/>
       </Routes>

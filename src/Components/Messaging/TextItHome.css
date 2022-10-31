@@ -1,0 +1,14 @@
+.homepage {
+    margin-top: 50px;
+}
+
+.homepage-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.homepage-text {
+    font-size: 30px;
+}
