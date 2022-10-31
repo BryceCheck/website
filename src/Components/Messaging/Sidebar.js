@@ -61,13 +61,13 @@ function Sidebar(props) {
           <div className='sidebar-container'>
             <img src='/fetchItLogo.png' alt='Profile Picture' className='logo'/>
             <div className='sidebar-title'>
-              <button className='sidebar-collapse-button' onClick={() => setCollapsed(!collapsed)}>
+              <button className='rounded-button spaced' onClick={() => setCollapsed(!collapsed)}>
                 <FontAwesomeIcon icon={collapsed ? faArrowRight : faArrowLeft}/>
               </button>
-              <button className='sidebar-settings-button' onClick={() => navigate('/profile')}>
+              <button className='rounded-button spaced' onClick={() => navigate('/profile')}>
                 <FontAwesomeIcon icon={faCog}/>
               </button>
-              <button className='sibebar-new-msg-button' onClick={() => {
+              <button className='rounded-button spaced' onClick={() => {
                 dispatch(selectConversation(null))
               }}>
                 <FontAwesomeIcon icon={faEdit}/>

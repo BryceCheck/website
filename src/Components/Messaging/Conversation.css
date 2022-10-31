@@ -55,6 +55,22 @@ button {
   overflow: auto;
 }
 
+.msg-container {
+  display: flex;
+  align-items: center;
+  margin: 2px 0;
+}
+
+.right-adjusted {
+  margin-left: auto;
+}
+
+.msg-author-label {
+  font-size: 10px;
+  color:darkgrey;
+  margin: 0 3px;
+}
+
 .outbound-message, .inbound-message {
   color: white;
   width: fit-content;

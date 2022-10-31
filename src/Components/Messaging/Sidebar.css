@@ -5,9 +5,9 @@
 }
 
 .sidebar-title {
-  width: 100%;
+  width: 67%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   padding: 15px 0;
 }
 
@@ -19,12 +19,10 @@
   width: 90%;
 }
 
-@media screen (min-width: 768px)
-.container {
-    max-width: 10%;
+.rounded-button {
+  border-radius: 5px;
 }
 
-@media screen (min-width: 576px)
-.container {
-    max-width: 100px;
-} 
+.spaced {
+  margin: 0 5px;
+}

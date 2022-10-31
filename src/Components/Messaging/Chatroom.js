@@ -24,8 +24,6 @@ import { initialize, newConversation, leaveConversation, addMessage, setMessageT
 
 import './Chatroom.css';
 
-
-
 function Chatroom(props) {
   // placeholder for conversationsclient which is initialized after
   // the component has mounted and the token has been retrieved
