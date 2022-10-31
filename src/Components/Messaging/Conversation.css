@@ -58,12 +58,13 @@ button {
 .msg-info-container {
   display: flex;
   flex-direction: column;
+  max-width: 30vw;
 }
 
 .msg-container {
   display: flex;
   align-items: center;
-  margin: 2px 0;
+  margin: 1px 0 0 0;
 }
 
 .right-adjusted {
@@ -88,8 +89,7 @@ button {
 
 .outbound-message, .inbound-message {
   color: white;
-  width: fit-content;
-  max-width: 57%;
+  max-width: 30vw;
   border-radius: 5px;
   padding-left: 10px;
   padding-right: 10px;
@@ -101,11 +101,12 @@ button {
 }
 
 .inbound-message {
+  margin-right: 0;
   background-color: grey;
 }
 
 .media-message {
-  max-width: 30%;
+  max-width: 30vw;
   padding: 30px;
 }
 

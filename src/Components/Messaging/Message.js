@@ -16,13 +16,13 @@ const Message = (props) => {
 
   var contentDiv;
   if (props.msg.type === 'media') {
-    contentDiv = <img src={props.msg.url} alt='Media Message Format not allwed' key={props.msg.key} className={props.msg.style + ' media-message'} ref={props.lastElementRef}/>;
+    contentDiv = <img onClick={e => setShowInfo(!showInfo)} src={props.msg.url} alt='Media Message Format not allwed' key={props.msg.key} className={props.msg.style + ' media-message'} ref={props.lastElementRef}/>;
   } else {
-    contentDiv = <div className={props.msg.style} key={props.msg.key} ref={props.lastElementRef}>{props.msg.body}</div>;
+    contentDiv = <div onClick={e => setShowInfo(!showInfo)} className={props.msg.style} key={props.msg.key} ref={props.lastElementRef}>{props.msg.body}</div>;
   }
 
   return (
-    <div className={infoStyle} onClick={e => setShowInfo(!showInfo)}>
+    <div className={infoStyle}>
       <div className={style}>
         {isOutbound
           ? <>{label}{contentDiv}</>
