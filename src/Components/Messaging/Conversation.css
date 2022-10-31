@@ -55,6 +55,11 @@ button {
   overflow: auto;
 }
 
+.msg-info-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .msg-container {
   display: flex;
   align-items: center;
@@ -63,6 +68,16 @@ button {
 
 .right-adjusted {
   margin-left: auto;
+}
+
+.right-text {
+  text-align: right;
+}
+
+.msg-info-label {
+  font-size: 10px;
+  color: darkgrey;
+  margin: 3px 0;
 }
 
 .msg-author-label {

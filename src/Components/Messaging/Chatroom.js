@@ -48,12 +48,12 @@ function Chatroom(props) {
           .then(
             url => {
               const styleClass = msgClass + ' media-message';
-              dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass, convoId: msg.conversation.sid}));
+              dispatch(addMessage({type: 'media', url: url, key: msg.state.id, style: styleClass, convoId: msg.conversation.sid, author: msg.author, timestamp: msg.dateCreated}));
             },
           )
           .catch(console.error);
       } else {
-        dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid, convoId: msg.conversation.sid}));
+        dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid, convoId: msg.conversation.sid, author: msg.author, timestamp: msg.dateCreated}));
       }
     } else {
       dispatch(setMessageToUnread(msg.conversation.sid));

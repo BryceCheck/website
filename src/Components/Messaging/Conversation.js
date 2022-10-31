@@ -33,6 +33,7 @@ import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
 
 import './Conversation.css';
 import { useGetCurrentUser } from './Hooks';
+import Message from './Message';
 
 // Joins existing conversation or creates new one if no conversation between client and customer exists already
 const joinConversation = (destination, client, setStatus) => {
@@ -229,23 +230,11 @@ function Conversation(props) {
     const msgs = [];
     for (var i = 0; i < state.messaging.currentMessages.length; i++) {
       const msg = state.messaging.currentMessages[i];
-      var contentDiv;
-      if (msg.type === 'media') {
-        contentDiv = <img src={msg.url} alt='Media Message Format not allwed' key={msg.key} className={msg.style + ' media-message'} ref={lastElementRef}/>;
-      } else {
-        contentDiv = <div className={msg.style} key={msg.key} ref={lastElementRef}>{msg.body}</div>;
-      }
-      const isOutbound = msg.style === OUTBOUND_MSG;
-      const label = <div className='msg-author-label'>{msg.author}</div>;
-      const style = isOutbound ? 'msg-container right-adjusted' : 'msg-container';
-      msgs.push(
-        <div className={style}>
-          {isOutbound
-            ? <>{label}{contentDiv}</>
-            : <>{contentDiv}{label}</>
-          }
-        </div>
-      )
+      console.log(msg);
+      msgs.push(<Message 
+        msg={msg} 
+        lastElementRef={i === state.messaging.currentMessages.length - 1 ? lastElementRef : null}
+      />);
     }
     return msgs;
   });
@@ -309,7 +298,8 @@ function Conversation(props) {
           }
         })
         const classNames = msgPaginator.items.map(msg => {
-          const msgArr = [msg.state.sid, msg.state.index, msg.author];
+          console.log(msg.dateCreated)
+          const msgArr = [msg.state.sid, msg.state.index, msg.author, msg.dateCreated];
           return msg.author === currUser.id ? [OUTBOUND_MSG, ...msgArr] : [INBOUND_MSG, ...msgArr];
         });
         // Must return as promises to get the callback urls to display the media messages
@@ -323,9 +313,9 @@ function Conversation(props) {
           const msg = msgs[i];
           const msgClass = msgs[classNamesIdx + i];
           if (typeof(msg) === 'string' && ![INBOUND_MSG, OUTBOUND_MSG].includes(msg)) {
-            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: msgClass[0], idx: msgClass[2], author: msgClass[3]});
+            msgDivs.push({type: 'media', url: msg, key: msgClass[1], style: msgClass[0], idx: msgClass[2], author: msgClass[3], timestamp: msgClass[4]});
           } else {
-            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body, idx: msgClass[2], author: msgClass[3]});
+            msgDivs.push({type: 'text', key: msgClass[1], style: msgClass[0], body: msg.body, idx: msgClass[2], author: msgClass[3], timestamp: msgClass[4]});
           }
         }
         dispatch(setMessages(msgDivs));
