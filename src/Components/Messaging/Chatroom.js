@@ -17,7 +17,7 @@ import { Client as ConversationsClient } from '@twilio/conversations';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
-import { useGetCurrentUser } from './Hooks';
+import { useGetCurrentUser, useIsOnScreen } from './Hooks';
 import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT, WSS_HOST } from '../../consts';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
@@ -39,6 +39,7 @@ function Chatroom(props) {
 
   // callback used to dispatch new messages if the message is to the current conversation
   const msgCallback = (msg, selectedConvo) => {
+    // Add the message to the current convo if displayed
     if(msg.conversation.sid === selectedConvo.sid) {
       console.log('curUser, msg.author:', currUserRef.current, msg.author);
       const msgClass = msg.author === currUserRef.current.id ? OUTBOUND_MSG : INBOUND_MSG;
@@ -55,10 +56,29 @@ function Chatroom(props) {
       } else {
         dispatch(addMessage({type: 'text', style: msgClass, body: msg.body, key: msg.state.sid, convoId: msg.conversation.sid, author: msg.author, timestamp: msg.dateCreated}));
       }
+    // Mark the conversation with the new message as unread
     } else {
       dispatch(setMessageToUnread(msg.conversation.sid));
     } 
+    // Send out a notification if the user isn't looking at the app
+    const body = msg.body.length > 30 ? msg.body.substring(0,30) + '...' : msg.body;
+    if(document.hidden) {
+      const notificationOptions = {
+        badge: `${HOST}/fetchItLogo.png`,
+        icon: `${HOST}/fetchItLogo.png`,
+        body: msg.body.substring(0, 30)
+      }
+      const notification = new Notification(`New Message from ${msg.author}`, notificationOptions);
+      notification.addEventListener('click', window.focus());
+    }
   }
+
+  // When the messages load, determine whether or not the browser has notifications enabled
+  useEffect(() => {
+    if(Notification.permission !== 'granted') {
+      Notification.requestPermission()
+    }
+  })
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
