@@ -61,16 +61,16 @@ function Chatroom(props) {
       dispatch(setMessageToUnread(msg.conversation.sid));
     } 
     // Send out a notification if the user isn't looking at the app
-    const body = msg.body.length > 30 ? msg.body.substring(0,30) + '...' : msg.body;
-    if(document.hidden) {
+    if(document.visibilityState === 'hidden' || !document.hasFocus()) {
+      const body = msg.body.length > 30 ? msg.body.substring(0,30) + '...' : msg.body;
       const notificationOptions = {
         badge: `${HOST}/fetchItLogo.png`,
         icon: `${HOST}/fetchItLogo.png`,
-        body: msg.body.substring(0, 30)
+        body: body
       }
       const notification = new Notification(`New Message from ${msg.author}`, notificationOptions);
-      notification.addEventListener('click', window.focus());
-    }
+      notification.addEventListener('click', window.open(HOST + '/messages'));
+    } 
   }
 
   // When the messages load, determine whether or not the browser has notifications enabled
