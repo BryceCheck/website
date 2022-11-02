@@ -163,16 +163,49 @@ app.get('/online-reps', requiresAuth(), (req, res) => {
 
 // joins or makes conversations which already exist
 app.post('/join-convo', requiresAuth(), (req, res) => {
+  // Get the users in the org
+  var identities;
+  // Get the orgId of the user
+  getUser(req.oidc.user.email)
+  .then(
+    userData => getUsersInOrg(userData[0].app_metadata.orgId),
+    err => {
+      console.error('Error while getting users in org:', err);
+      res.send(400);
+    }
+  )
+  // Get the users in the org
+  .then(
+    usersInOrg => {
+      identities = usersInOrg.map(user => user.email);
+    },
+    err => {
+      console.error('Error while retrieving users in org:', err);
+      res.send(400);
+    }
+  )
   // Get the auth header string
-  getAuthorizationHeaderString(req.oidc.accessToken)
+  .then(
+    _ => getAuthorizationHeaderString(req.oidc.accessToken),
+    err => {
+      console.error('Error while mapping user emails:', err);
+      res.send(400);
+    }
+  )
   // Make the request to the backend
   .then(
-    authStr => getAuthenticatedRequest(HOST + ':' + API_PORT + '/join-conversation', authStr, POST, {
-      destination: req.body.destination,
-      identity: req.oidc.user.email,
-      twilioNumber: TWILIO_NUMBER
-    }),
-    response => res.sendStatus(response.status))
+    authStr => {
+      return getAuthenticatedRequest(HOST + ':' + API_PORT + '/join-conversation', authStr, POST, {
+        destination: req.body.destination,
+        identities: identities,
+        twilioNumber: TWILIO_NUMBER
+      })
+    },
+    err => {
+      console.error(err),
+      res.sendStatus(400)
+    }
+  )
   .then(
     response => res.json({sid: response.data.sid}),
     _ => res.sendStatus(401));
