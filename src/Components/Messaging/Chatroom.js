@@ -96,6 +96,11 @@ function Chatroom(props) {
     .then(data => {
       var newClient = new ConversationsClient(data.accessToken);
       client.current = newClient;
+      client.current.on("conversationAdded", convo => {
+        console.log('new conversation added:', convo);
+        const convoData = {sid: convo.sid, title: convo.uniqueName ? convo.uniqueName : ''};
+        dispatch(newConversation(convoData));
+      })
       client.current.on("conversationJoined", convo => {
         const convoData = {sid: convo.sid, title: convo.uniqueName ? convo.uniqueName : ''};
         dispatch(newConversation(convoData));

@@ -257,8 +257,19 @@ app.post('/user', requiresAuth(),(req, res) => {
   .catch(err => console.error('Unhandled error:', err));
 });
 
-app.get('/logout-user', requiresAuth(), logoutUser);
+// This endpoint needs to be authenticated, but it means we need to register a Machine to Machine App
+app.get('/users', (req, res) => {
+  getUsersInOrg(req.query.orgId)
+  .then(
+    users => res.send(users),
+    err => {
+      console.error(err);
+      res.send(400);
+    }
+  )
+});
 
+app.get('/logout-user', requiresAuth(), logoutUser);
 app.delete('/user', requiresAuth(), deleteUser);
 
 // Starts the service
