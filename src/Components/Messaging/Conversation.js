@@ -22,8 +22,7 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
 // home brewed imports
-import ListSelectModal from './ListSelectModal'
-import { selectConversation, setMessages, addPreviousMessages, leaveConversation } from '../../Reducers/messagingReducer';
+import { selectConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
 import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH, 
          OUTBOUND_MSG,
@@ -61,51 +60,6 @@ const joinConversation = (destination, client, setStatus) => {
     }
   )
   .catch(console.error);
-}
-
-// Share the conversation with a different user and leave
-const shareConversation = (convo, dispatch, setDisplay) => {
-  return (identity, setStatus, currUser) => {
-    // Find the twilioId of the current user
-    console.log(identity);
-    convo.getParticipants().then(
-      participants => {
-        const currParticipant = participants.find(participant => {
-          console.log(participant.identity, currUser);
-          return participant.identity === currUser.id;
-        });
-        console.log(currParticipant);
-        return currParticipant.sid;
-      },
-      err => console.error('Could not get conversation participants:', err)
-    )
-    // Request the backend to transfer the conversation
-    .then(
-      sid => axios.post(HOST + '/transfer-conversation', {convoId: convo.sid, identity: identity, currUserTwilioId: sid}),
-      err => console.error('Could not get current user twilio ID:', err)
-    )
-    .then(
-      // Leave the conversation
-      res => {
-        if(res.status >= 200 && res.status < 300) {
-          convo.leave();
-        } else {
-          throw(new Error(`Bad request to transfer conversation: ${res.status}`));
-        }
-      }
-    )
-    .then(
-      // Update the UI after successfully leaving and sharing conversation
-      _ => {
-        dispatch(leaveConversation(convo))
-        setDisplay(false);
-      },
-      err => {
-        setStatus('Error occurred while transferring the conversation!');
-        console.log(err);
-      })
-    .catch(console.error);
-  }
 }
 
 // used to handle logic of fetching previous messages if they exist
@@ -210,12 +164,8 @@ function Conversation(props) {
   const destinationRef = useRef(null);
   const fileUploadRef = useRef(null);
   const lastElementRef = useRef(null);
-  const tooltipRef = useRef(null);
-  const deleteBtnRef = useRef(null);
-  const shareBtnRef = useRef(null);
   const currUser = useGetCurrentUser();
   const [title, setTitle] = useState(null);
-  const [displayModal, setDisplayModal] = useState(false);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
@@ -333,15 +283,7 @@ function Conversation(props) {
     lastElementRef.current.scrollIntoView({behavior: 'smooth', block: 'end'});
   }, [messages])
 
-  // Create the instances of handlers
-  const boundHandleShare = shareConversation(convo, dispatch, setDisplayModal);
-
   return (<>
-    <ListSelectModal
-      display={displayModal}
-      setParentDisplay={() => setDisplayModal(false)}
-      handleAccept={boundHandleShare}
-    />
     <Card className='convo-holder'>
       <Card.Header>
         <div className='header'>
@@ -351,23 +293,12 @@ function Conversation(props) {
             <FontAwesomeIcon icon={faEnvelope} className='email-icon' size='xl'/>
             <FontAwesomeIcon icon={faWhatsapp} className='whatsapp-icon' size='xl'/>
           </div>
-          <div className='convo-action-button-container'>
-            <button className='convo-share-button' disabled={!convo} onClick={() => {setDisplayModal(true)}}>
-              <FontAwesomeIcon icon={faShare} className='convo-share-button-icon'/>
-            </button>
-            <button className='convo-leave-button' disabled={!convo} onClick={() => {
-              convo.leave();
-              dispatch(selectConversation(null));
-            }}>
-              <FontAwesomeIcon icon={faSignOut} className='convo-leave-button-icon'/>
-            </button>
-            <button className='convo-delete-button' disabled={!convo} onClick={() => {
-              convo.delete();
-              dispatch(selectConversation(null));
-            }}>
-              <FontAwesomeIcon icon={faCircleXmark} className='convo-delete-button-icon'/>
-            </button>
-          </div>
+          <button className='convo-delete-button' disabled={!convo} onClick={() => {
+            convo.delete();
+            dispatch(selectConversation(null));
+          }}>
+            <FontAwesomeIcon icon={faCircleXmark} className='convo-delete-button-icon'/>
+          </button>
         </div>
       </Card.Header>
       <Card.Body>
