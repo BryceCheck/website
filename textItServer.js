@@ -7,13 +7,9 @@ const dotenv = require('dotenv').config();
 const bodyParser = require('body-parser');
 const { auth, requiresAuth } = require('express-openid-connect');
 const { default: axios } = require('axios');
-const { WebSocket, WebSocketServer } = require('ws');
 const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInOrg } = require('./auth0-handlers');
-const socketMap = new Map();
-var ApiSocket = null;
 var orionToken;
 
-const WS_HOST = 'wss://brycecheck.com';
 const HOST = 'https://brycecheck.com';
 const API_PORT = 3001;
 const DB_API_PORT = 3002;
@@ -310,39 +306,8 @@ const startService = () => {
     cert: fs.readFileSync(process.env.CERT_LOC)
   }
 
-  // Create the websocket server
-  const socketServer = new WebSocketServer({ noServer: true });
-  socketServer.on('connection', (ws, req) => {
-    // store the socket information by client identity
-    const id = req.url.split('?')[1].split('=')[1];
-    socketMap.set(id, ws);
-    console.log('connected to websocket with client id:', id);
-  })
-
   // Create the https server
   const httpsServer = https.createServer(options, app);
-  // Handle protocol upgrade requests
-  httpsServer.on('upgrade', (req, socket, head) => {
-    // Make sure that that upgrade requests are authenticated as well
-    socketServer.handleUpgrade(req, socket, head, ws => {
-      socketServer.emit('connection', ws, req);
-    });
-  });
-
-  // Create a websocket client to the backend
-  const ws = new WebSocket(WS_HOST + ':' + API_PORT);
-  ws.on('error', (err) => {
-    console.error('Error with API websocket:', err);
-  });
-  ws.on('connection', () => {
-    console.log('connected to websocket server!');
-  });
-  ws.on('message', (data) => {
-    // Transform received text into javascript object
-    console.log('data received:', data);
-    // Find type of message
-    // Handle that type of message
-  });
   httpsServer.listen(443);
 
   // Create a server listening on 80 to redirect to https @443
