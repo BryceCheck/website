@@ -17,7 +17,7 @@ import { Client as ConversationsClient } from '@twilio/conversations';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from './Sidebar';
 import Conversation from './Conversation';
-import { useGetCurrentUser, useIsOnScreen } from './Hooks';
+import { useGetCurrentUser } from './Hooks';
 import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT, WSS_HOST } from '../../consts';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
@@ -95,6 +95,7 @@ function Chatroom(props) {
     // Initialize the chat client
     .then(data => {
       var newClient = new ConversationsClient(data.accessToken);
+      console.log('new chat client:', newClient);
       client.current = newClient;
       client.current.on("conversationAdded", convo => {
         console.log('new conversation added:', convo);
@@ -114,16 +115,19 @@ function Chatroom(props) {
       })
       return client.current.getSubscribedConversations();
     })
-    .then(convos => {
-      const convoData = convos.items.map(convo => {
-        return {
-          sid: convo.sid,
-          title: convo.uniqueName ? convo.uniqueName : '',
-          isRead: true
-        };
-      });
-      dispatch(initialize(convoData));
-    })
+    .then(
+      convos => {
+        const convoData = convos.items.map(convo => {
+          return {
+            sid: convo.sid,
+            title: convo.uniqueName ? convo.uniqueName : '',
+            isRead: true
+          };
+        });
+        dispatch(initialize(convoData));
+      },
+      err => console.error(`Error while getting subscribed conversations: ${err}`)
+    )
     .catch(console.error);
   }, []);
 

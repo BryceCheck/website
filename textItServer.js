@@ -11,10 +11,12 @@ const { WebSocket, WebSocketServer } = require('ws');
 const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInOrg } = require('./auth0-handlers');
 const socketMap = new Map();
 var ApiSocket = null;
+var orionToken;
 
 const WS_HOST = 'wss://brycecheck.com';
 const HOST = 'https://brycecheck.com';
 const API_PORT = 3001;
+const DB_API_PORT = 3002;
 const TWILIO_NUMBER = '+17245586932';
 const GET = 'get';
 const POST = 'post';
@@ -33,6 +35,24 @@ const config = {
     scope: 'openid profile email',
   },
 };
+
+// Gets the access token for the Orion API
+const getOrionAccessToken = () => {
+  axios.post(`${process.env.ISSUER_BASE_URL}/oauth/token`, {
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    audience: `OrionApi`,
+    grant_type: 'client_credentials'
+  })
+  .then(
+    res => {
+      orionToken = res.data.access_token;
+    },
+    err => console.error(`Error while retrieving Orion DB access token: ${err}`)
+  )
+}
+
+const getAuthHeader = () => {return {headers: {Authorization: `Bearer ${orionToken}`}}};
 
 const getAuthorizationHeaderString = (accessToken) => {
   let { token_type, access_token, isExpired, refresh } = accessToken;
@@ -75,9 +95,12 @@ app.get('/token', requiresAuth(), async (req, res) => {
     response => res.sendStatus(response.status))
   .then(
     // Successful retrieval
-    response => res.json({accessToken: response.data.accessToken}),
+    response => res.send({accessToken: response.data.accessToken}),
     // Failure to retrieve
-    response => res.sendStatus(response.status)
+    err => {
+      console.error(`Error retrieving auth token: ${err}`);
+      res.sendStatus(400);
+    }
   )
   .catch(err => {console.error('Error getting auth token:', err)});
 });
@@ -163,12 +186,16 @@ app.get('/online-reps', requiresAuth(), (req, res) => {
 
 // joins or makes conversations which already exist
 app.post('/join-convo', requiresAuth(), (req, res) => {
-  // Get the users in the org
-  var identities;
+  if(!req.body.destination) res.sendStatus(400);
+  // Get the users in the org and messaging service id
+  var identities, authHeaders, orgId, messagingSid;
   // Get the orgId of the user
   getUser(req.oidc.user.email)
   .then(
-    userData => getUsersInOrg(userData[0].app_metadata.orgId),
+    userData => {
+      orgId = userData[0].app_metadata.orgId;
+      return getUsersInOrg(orgId);
+    },
     err => {
       console.error('Error while getting users in org:', err);
       res.send(400);
@@ -192,23 +219,36 @@ app.post('/join-convo', requiresAuth(), (req, res) => {
       res.send(400);
     }
   )
-  // Make the request to the backend
+  // Get the messaging service id
   .then(
     authStr => {
-      return getAuthenticatedRequest(HOST + ':' + API_PORT + '/join-conversation', authStr, POST, {
-        destination: req.body.destination,
-        identities: identities,
-        twilioNumber: TWILIO_NUMBER
-      })
+      authHeaders = authStr;
+      return axios.get(HOST + ':' + DB_API_PORT + `/client?id=${orgId}`, getAuthHeader());
     },
     err => {
       console.error(err),
       res.sendStatus(400)
     }
   )
+  // Make the request to the backend to join the conversation
+  .then(
+    response => {
+      messagingSid = response.data.client.messagingserviceid;
+      return getAuthenticatedRequest(HOST + ':' + API_PORT + '/create-conversation', authHeaders, POST, {
+        destination: req.body.destination,
+        identities: identities,
+        msgServiceId: messagingSid
+      })
+    },
+    err => console.error(`Error while retrieving client information: ${err}`)
+  )
   .then(
     response => res.json({sid: response.data.sid}),
-    _ => res.sendStatus(401));
+    err => {
+      console.error(`Error while creating conversation: ${err}`);
+      res.sendStatus(401);
+    }
+  )
 });
 
 app.post('/transfer-conversation', requiresAuth(), (req, res) => {
@@ -257,24 +297,13 @@ app.post('/user', requiresAuth(),(req, res) => {
   .catch(err => console.error('Unhandled error:', err));
 });
 
-// This endpoint needs to be authenticated, but it means we need to register a Machine to Machine App
-app.get('/users', (req, res) => {
-  getUsersInOrg(req.query.orgId)
-  .then(
-    users => res.send(users),
-    err => {
-      console.error(err);
-      res.send(400);
-    }
-  )
-});
-
 app.get('/logout-user', requiresAuth(), logoutUser);
 app.delete('/user', requiresAuth(), deleteUser);
 
 // Starts the service
 const startService = () => {
   connectToAuth0(process.env.CLIENT_ID, process.env.CLIENT_SECRET);
+  getOrionAccessToken();
   // Create the configuration options for keys, certs, etc for the https server
   const options = {
     key: fs.readFileSync(process.env.KEY_LOC),

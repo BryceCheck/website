@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark, faPaperclip, faPaperPlane,
-         faSms, faEnvelope, faSignOut, faShare } from '@fortawesome/free-solid-svg-icons';
+         faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
@@ -144,6 +144,7 @@ const sendMessage = (convo, message, file, setStatus, setMessage, setFile, fileR
   // Check the length of the message
   if (message.length > MAX_MESSAGE_LENGTH) {
     setStatus('Max message length is:', MAX_MESSAGE_LENGTH, 'words.');
+    return;
   } else if (message.length !== 0) {
     convo.sendMessage(message);
   }
