@@ -53,7 +53,7 @@ const joinConversation = (destination, client, setStatus) => {
     }
   )
   .then(
-    convo => convo.join(),
+    _ => {},
     err => {
       setStatus('Error occurred while retrieving conversation data');
       console.error(err);

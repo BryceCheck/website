@@ -246,7 +246,7 @@ app.post('/join-convo', requiresAuth(), (req, res) => {
     response => res.json({sid: response.data.sid}),
     err => {
       console.error(`Error while creating conversation: ${err}`);
-      res.sendStatus(401);
+      res.sendStatus(400);
     }
   )
 });
