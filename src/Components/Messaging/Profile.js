@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useSelector, dispatch } from 'react-redux';
 import { Container, Card, Table, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useGetCurrentUser } from './Hooks';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 
 import Navbar from '../Navbar/Navbar';
 
@@ -27,6 +29,7 @@ const Profile = (props) => {
   const userInfo = useGetCurrentUser();
   const [inviteInfo, setInviteInfo] = useState({email: '', number: '', name: '', role: RoleOptions.USER});
   const [repRows, setRepRows] = useState([]);
+  const [displayRows, setDisplayRows] = useState([]);
   const [errors, setErrors] = useState({email: '', number: '', name: '', role: ''});
   const [showModal, setShowModal] = useState(false);
 
@@ -85,21 +88,38 @@ const Profile = (props) => {
     )
   }
 
+  // Creates the react components out of the rep row data
+  useEffect(() => {
+    setDisplayRows(repRows.map(rep => {
+      // Create the action buttons for the row
+      const deleteButton = <FontAwesomeIcon icon={faCircleXmark} className='user-delete-button' onClick={_ => {
+        // Delete the rep
+        axios.delete('/user', {data: { id: rep.id}})
+        .then(
+          _ => {
+            const rows = repRows.filter(otherRep => {
+              console.log(rep.id, otherRep.id);
+              return otherRep.id !== rep.id;
+            });
+            setRepRows(rows);
+          },
+          err => console.error(`Error deleting user: ${err}`)
+        )
+      }}/>
+      // Return the react component
+      return <tr>
+        <td>{rep.name}</td>
+        <td>{rep.email}</td>
+        <td>{rep.role}</td>
+        <td>{deleteButton}</td>
+      </tr>;
+    }));
+  }, [repRows]);
+
   // Get all of the users in the org on mount
   useEffect(() => {
     axios.get('/reps').then(
-      res => {
-        console.log(res.data);
-        // Transform the json array of reps into table rows
-        setRepRows(res.data.reps.map(rep => {
-          // Make sure to only list the members who aren't logged in
-          return <tr>
-            <td>{rep.name}</td>
-            <td>{rep.email}</td>
-            <td>{rep.role}</td>
-          </tr>;
-        }))
-      },  
+      res => setRepRows(res.data.reps),  
       err => console.error('Error while getting org reps:', err)
     );
   }, [userInfo]);
@@ -137,10 +157,11 @@ const Profile = (props) => {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {repRows}
+                {displayRows}
               </tbody>
             </Table>
           </div>

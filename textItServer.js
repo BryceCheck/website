@@ -141,7 +141,8 @@ app.get('/reps', requiresAuth(), (req, res) => {
       return {
         name: user.name,
         email: user.email,
-        role: user.user_metadata.role
+        role: user.user_metadata.role,
+        id: user.user_id
       }
     })}),
     err => {
@@ -284,17 +285,31 @@ app.post('/user', requiresAuth(),(req, res) => {
     err => console.error(`Error while getting user from OAuth: ${err}`)
   )
   .then(
-    _ => res.send(200),
+    _ => res.sendStatus(200),
     err => {
-      res.send(400);
+      res.sendStatus(400);
       console.error(err);
     }
   )
   .catch(err => console.error('Unhandled error:', err));
 });
 
+app.delete('/user', requiresAuth(), (req, res) => {
+  if(!req.body.id) {
+    res.sendStatus(400);
+    return;
+  }
+  deleteUser(req.body.id)
+  .then(
+    _ => res.sendStatus(200),
+    err => {
+      res.sendStatus(400);
+      console.error(`Error while deleting user: ${err}`);
+    }
+  )
+})
+
 app.get('/logout-user', requiresAuth(), logoutUser);
-app.delete('/user', requiresAuth(), deleteUser);
 
 // Starts the service
 const startService = () => {

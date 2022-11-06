@@ -54,3 +54,11 @@ button {
     margin-left: auto;
     margin-right: auto;
 }
+
+.user-delete-button {
+    color: red;
+}
+
+.user-delete-button:hover {
+    cursor: pointer;
+}
