@@ -56,6 +56,7 @@ const Profile = (props) => {
   }
 
   const handleSendInvite = (e) => {
+    console.log('Sending invite');
     var emptyFieldExists = false;
     // Make sure that all the data is there
     for (const [key, val] of Object.entries(errors)) if (val !== '') return;
@@ -67,16 +68,18 @@ const Profile = (props) => {
       }
     }
     if(emptyFieldExists) return;
-    // post to the /users endpoint
+    // post to the /users endpoint to create a user
     axios.post('/user', inviteInfo)
     // handle the response or errors
     .then(
       _ => {
-        setInviteInfo(inviteInfo => ({email: '', number: '', name: '', role: RoleOptions.USER}));
-        setErrors(errors => ({email: '', number: '', name: '', role: ''}));
+        console.log('Successfully created user!');
+        setShowModal(false);
+        setInviteInfo({email: '', number: '', name: '', role: RoleOptions.USER});
+        setErrors({email: '', number: '', name: '', role: ''});
       },
       err => {
-        console.error(err);
+        console.error(`Error while creating user: ${err}`);
         handleErrorsChange(InputFields.SUBMIT, 'Error while inviting new user. Please try again later');
       }
     )

@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const { auth, requiresAuth } = require('express-openid-connect');
 const { default: axios } = require('axios');
 const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInOrg } = require('./auth0-handlers');
+const { error } = require('console');
 var orionToken;
 
 const HOST = 'https://brycecheck.com';
@@ -270,23 +271,22 @@ app.get(['/messages', '/profile'], (req, res) => {
 
 // Handles the creating a user post request
 app.post('/user', requiresAuth(),(req, res) => {
-  if(!req.body.email, !req.body.phoneNumber, !req.body.name, !req.body.role) res.status(400).send('Missing create user data');
+  if(!req.body.email, !req.body.phoneNumber, !req.body.name, !req.body.role) res.sendStatus(400);
   // Get the orgId of the admin making the request
   getUser(req.oidc.user.email)
   // Send out the create user request
   .then(
     data => {
-      const orgId = data.app_metadata ? data.app_metadata.orgId : 'Schultz Technologies';
+      const user = data[0];
+      const orgId = user.app_metadata ? user.app_metadata.orgId : 'Schultz Technologies';
       return createUser(orgId, req.body.email, req.body.phoneNumber, req.body.name, req.body.role);
     },
-    _ => {
-      res.status(401).send('Unauthorized request to create the user')
-    }
+    err => console.error(`Error while getting user from OAuth: ${err}`)
   )
   .then(
-    _ => res.status(200),
+    _ => res.send(200),
     err => {
-      res.status(401).send('Could not create the new user')
+      res.send(400);
       console.error(err);
     }
   )
