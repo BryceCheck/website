@@ -18,6 +18,9 @@ const TWILIO_NUMBER = '+17245586932';
 const GET = 'get';
 const POST = 'post';
 
+const DB_URL = `${HOST}:${DB_API_PORT}`;
+const API_URL = `${HOST}:${API_PORT}`;
+
 // Authentication configuration
 const config = {
   authRequired: false,
@@ -89,7 +92,11 @@ app.get('/token', requiresAuth(), async (req, res) => {
     // Authenitcate request to API server
     authStr => getAuthenticatedRequest(HOST + ':' + API_PORT + '/access-token?email='+req.oidc.user.email, authStr, GET), 
     // Return error of retrieving access token for API server
-    response => res.sendStatus(response.status))
+    err => {
+      console.error(`Error while getting authorization header string: ${err}`);
+      res.sendStatus(400);
+    }
+  )
   .then(
     // Successful retrieval
     response => res.send({accessToken: response.data.accessToken}),
@@ -104,8 +111,20 @@ app.get('/token', requiresAuth(), async (req, res) => {
 
 // gets the user info from the oidc token
 app.get('/user-info', requiresAuth(), (req, res) => {
-  // Get the role of the current user
+  var userInfo;
+  // Get the user info from Auth0
   getUser(req.oidc.user.email)
+  // Use the orgId to get the client information
+  .then(
+    response => {
+      userInfo = response[0];
+      return axios.get(`${DB_URL}/client?id=${response[0].app_metadata.orgId}`, getAuthHeader())
+    },
+    err => {
+      console.error(`Error while retrieving user info: ${err}`);
+      res.sendStatus(400);
+    }
+  )
   .then(
     response => {
       // return just the needed information to the front end
@@ -114,9 +133,9 @@ app.get('/user-info', requiresAuth(), (req, res) => {
         firstName: req.oidc.user.given_name,
         lastName: req.oidc.user.family_name,
         email: req.oidc.user.email,
-        role: response[0].user_metadata.role,
-        org: 'Schultz Technologies',
-        id: req.oidc.user.email // will be switched to a UUID once DB's are implemented
+        role: userInfo.user_metadata.role,
+        org: response.data.client.CompanyName,
+        id: req.oidc.user.email
       }});
     }
   )
@@ -305,6 +324,40 @@ app.delete('/user', requiresAuth(), (req, res) => {
     err => {
       res.sendStatus(400);
       console.error(`Error while deleting user: ${err}`);
+    }
+  )
+})
+
+app.get('/customer', requiresAuth(), (req, res) => {
+  // Make sure the required data is there
+  if(!req.query.number) return res.sendStatus(400);
+  // Get the orgId from Auth0
+  getUser(req.oidc.user.email)
+  // Get the internal identifier from the database
+  .then(
+    response => axios.get(`${DB_URL}/client?id=${response[0].app_metadata.orgId}`, getAuthHeader()),
+    err => {
+      console.error(`Error while retrieving internal id from database: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Send internalIdentifer and number to database for query
+  .then(
+    response => axios.get(`${DB_URL}/customer?number=${req.query.number}&internalId=${response.data.client.InternalIdentifier}`, getAuthHeader()),
+    err => {
+      console.error(`Error while getting user from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Return response
+  .then(
+    response => {
+      const customerName = `${response.data.customer.FirstName.trim()} ${response.data.customer.LastName.trim()}`;
+      res.send({name: customerName})
+    },
+    err => {
+      console.error(`Error while getting customer id from phone number from orion: ${err}`);
+      res.sendStatus(400);
     }
   )
 })

@@ -23,6 +23,7 @@ import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT } from '../../consts';
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
 import './Chatroom.css';
+import axios from 'axios';
 
 function Chatroom(props) {
   // placeholder for conversationsclient which is initialized after
@@ -82,9 +83,9 @@ function Chatroom(props) {
 
   // When the comonent mounts, retrieve a backend token
   useEffect(() => {
+    var conversations;
     const tokenURL = HOST + TOKEN_ENDPOINT;
     fetch(tokenURL, {
-      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
       }
@@ -114,18 +115,31 @@ function Chatroom(props) {
       })
       return client.current.getSubscribedConversations();
     })
+    // Get the name of the participant in the conversation
     .then(
       convos => {
-        const convoData = convos.items.map(convo => {
-          return {
-            sid: convo.sid,
-            title: convo.uniqueName ? convo.uniqueName : '',
-            isRead: true
-          };
-        });
-        dispatch(initialize(convoData));
+        console.log(convos);
+        conversations = convos.items;
+        return Promise.all(
+          convos.items.map(convo => axios.get(`${HOST}/customer?number=${convo.friendlyName.slice(2)}`))
+        )
       },
       err => console.error(`Error while getting subscribed conversations: ${err}`)
+    )
+    .then(
+      vals => {
+        const convoData = [];
+        for(var i = 0; i < conversations.length; i++) {
+          const convo = conversations[i];
+          convoData.push({
+            sid: convo.sid,
+            title: vals[i].data.name,
+            isRead: true
+          });
+        }
+        dispatch(initialize(convoData));
+      },
+      err => console.error(`Error while forming sidebar: ${err}`)
     )
     .catch(console.error);
   }, []);
