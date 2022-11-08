@@ -131,9 +131,10 @@ function Chatroom(props) {
         const convoData = [];
         for(var i = 0; i < conversations.length; i++) {
           const convo = conversations[i];
+          const convoTitle = vals[i].data.name ? vals[i].data.name : convo.friendlyName;
           convoData.push({
             sid: convo.sid,
-            title: vals[i].data.name,
+            title: convoTitle,
             isRead: true
           });
         }

@@ -357,7 +357,7 @@ app.get('/customer', requiresAuth(), (req, res) => {
     },
     err => {
       console.error(`Error while getting customer id from phone number from orion: ${err}`);
-      res.sendStatus(400);
+      res.send({name: ''});
     }
   )
 })
