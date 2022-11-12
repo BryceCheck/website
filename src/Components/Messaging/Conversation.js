@@ -17,18 +17,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark, faPaperclip, faPaperPlane,
-         faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+         faSms, faEnvelope, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
 // home brewed imports
-import { selectConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
+import { selectConversation, setMessages, addPreviousMessages, editConversationTitle, setEditingConversationTitle } from '../../Reducers/messagingReducer';
 import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH, 
          OUTBOUND_MSG,
          INBOUND_MSG,
          MESSAGE_BLOCK_SIZE,
-         HOST} from '../../consts';
+         HOST,
+         MAX_NAME_LENGTH} from '../../consts';
 
 import './Conversation.css';
 import { useGetCurrentUser } from './Hooks';
@@ -167,6 +168,8 @@ function Conversation(props) {
   const lastElementRef = useRef(null);
   const currUser = useGetCurrentUser();
   const [title, setTitle] = useState(null);
+  const [showCustomerListModal, setShowCustomerListModal] = useState(false);
+  const [showCustomerProfileModal, setShowCUstomerProfileModal] = useState(false);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
@@ -216,30 +219,18 @@ function Conversation(props) {
       setConvo(null);
     } else {
       props.client.current.getConversationBySid(convoData.sid)
-      .then(convo => {
-        setConvo(convo);
-      })
-      .catch(console.error);
+      .then(
+        convo => setConvo(convo),
+        err => console.error(`Error while retrieving conversation: ${err}`))
     }
   }, [props.client, convoData]);
 
   // An effect to render the messages and title of the conversation component
   useEffect(() => {
     const fetchMessages = () => {
-      if(convo === null) {
-        setTitle(null);
-        return null;
-      }
-      // Get the participants
-      convo.getParticipants()
-      .then(participants => {
-        const newDestination = destinationRef.current ? destinationRef.current.value : '';
-        const destination = participants.find(participant => participant.type !== 'chat');
-        const newTitle = destination ? destination.state.bindings.sms.address : newDestination;
-        setTitle(newTitle);
-        return convo.getMessages();
-      })
+      if(!convo) return;
       // Get the message metadata needed to make the divs
+      convo.getMessages()
       .then(msgPaginator => {
         const msgs = msgPaginator.items.map(msg => {
           if (msg.type === 'media') {
@@ -271,7 +262,7 @@ function Conversation(props) {
         }
         dispatch(setMessages(msgDivs));
       })
-      .catch(console.error);
+      .catch(err => console.error(err));
     }
     fetchMessages();
     if(message) {
@@ -279,16 +270,25 @@ function Conversation(props) {
     }
   }, [convo]);
 
+  // Used to set the title of the conversation container header
+  useEffect(() => {
+    if(convo) {
+      setTitle(<div className='convo-title bold' onClick={_ => setShowCUstomerProfileModal(true)}>{convoData.title}</div>);
+    } else if (!convo) {
+      setTitle(<div className='convo-title bold' onClick={_ => {setShowCustomerListModal(true)}}>Choose Destination</div>);
+    }
+  }, [convo]);
+
   useEffect(() => {
     if(!lastElementRef.current) return;
     lastElementRef.current.scrollIntoView({behavior: 'smooth', block: 'end'});
-  }, [messages])
+  }, [messages]);
 
   return (<>
     <Card className='convo-holder'>
       <Card.Header>
         <div className='header'>
-          {title ? title : <input ref={destinationRef} placeholder="Destination..." className='destination-text-input'/>}
+          {title}
           <div className='convo-type-container'>
             <FontAwesomeIcon icon={faSms} className='sms-icon' size='xl'/>
             <FontAwesomeIcon icon={faEnvelope} className='email-icon' size='xl'/>

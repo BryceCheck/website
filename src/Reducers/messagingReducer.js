@@ -46,6 +46,9 @@ export const messagingSlice = createSlice({
     setMessageToUnread: (state, action) => {
       state.conversations.find(convo => convo.sid === action.payload).isRead = false;
     },
+    editConversationTitle: (state, action) => {
+      state.conversations.find(convo => convo.sid === action.payload.sid).title = action.payload.title;
+    },
     newConversation: (state, action) => {
       for(var i = 0; i < state.conversations.length; i++) {
         if (state.conversations[i].sid === action.payload.sid) {
@@ -59,6 +62,6 @@ export const messagingSlice = createSlice({
   }
 });
 
-export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, setMessageToUnread, addPreviousMessages } = messagingSlice.actions;
+export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, editConversationTitle, setEditingConversationTitle, setMessageToUnread, addPreviousMessages } = messagingSlice.actions;
 
 export default messagingSlice.reducer;

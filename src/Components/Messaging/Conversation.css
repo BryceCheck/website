@@ -8,6 +8,33 @@ button {
   max-height: 100%;
 }
 
+.convo-title {
+  width: 5%;
+  white-space: nowrap;
+}
+
+.convo-title-error {
+  color: red;
+}
+
+.title-input-container {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.convo-title-save-button {
+  border-radius: 3px;
+  margin: 0 3px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.convo-title:hover {
+  cursor: pointer;
+}
+
 .convo-action-button-container {
   display: flex;
   justify-content: space-between;

@@ -362,6 +362,102 @@ app.get('/customer', requiresAuth(), (req, res) => {
   )
 })
 
+// Retrieves the client that the auth0 user is a part of
+app.get('/client', requiresAuth(), (req, res) => {
+  // Get the user information from Auth0
+  getUser(req.oidc.user.email)
+  // Query the database service for the client information using orgId from user info
+  .then(
+    user => axios.get(`${DB_URL}/client?id=${user[0].app_metadata.orgId}`, getAuthHeader()),
+    err => {
+      console.error(`Error while retrieving customer from auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Return the request information to the front end
+  .then(
+    response => res.send({client: response.data.client}),
+    err => {
+      console.error(`Error while retrieving client information from database: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+});
+
+// Creates a new phone client in the orion database
+app.post('/phone-client', requiresAuth(), (req, res) => {
+  var orgId;
+  // Make sure that the request contains the required data
+  if (!req.body.number || !req.body.firstName || !req.body.lastName) return res.sendStatus(400);
+  // Get the org id from the Auth0 database
+  getUser(req.oidc.user.email)
+  // Get the internal id from orion
+  .then(
+    user => {
+      orgId = user[0].app_metadata.orgId;
+      return axios.get(`${DB_URL}/client?id=${orgId}`, getAuthHeader());
+    },
+    err => {
+      console.error(`Error while getting user from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Make the request to create the new phone client
+  .then(
+    response => axios.post(`${DB_URL}/client`, {
+      internalId: response.data.client.InternalIdentifier,
+      clientId: orgId,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      number: req.body.number
+    }, getAuthHeader()),
+    err => {
+      console.error(`Error while retrieving client from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Return the status to the client
+  .then(
+    _ => res.sendStatus(200),
+    err => console.error(`Error while creating new phone client: ${err}`)
+  )
+});
+
+app.patch('/phone-client', requiresAuth(), (req, res) => {
+  if (!req.body.firstName || !req.body.lastName || !req.body.number) return res.sendStatus(400);
+  // Get the orgId from from the auth0 user
+  getUser()
+  // Get the client information from orion
+  .then(
+    user => axios.get(`${DB_URL}/client?id=${user[0].app_metadata.orgId}`),
+    err => {
+      console.error(`Error while retrieving user info from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Update the name of the client on the orion api
+  .then(
+    response => axios.patch(`${DB_URL}/phone-client`, {
+      number: req.body.number,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      internalId: response.data.client.InternalIdentifier
+    }, getAuthHeader()),
+    err => {
+      console.error(`Error while retrieving client info from Orion: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Return status to user
+  .then(
+    _ => {},
+    err => {
+      console.error(`Error while retrieving client information from Orion: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+})
+
 app.get('/logout-user', requiresAuth(), logoutUser);
 
 // Starts the service
