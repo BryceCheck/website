@@ -328,7 +328,7 @@ app.delete('/user', requiresAuth(), (req, res) => {
   )
 })
 
-app.get('/customer', requiresAuth(), (req, res) => {
+app.get('/phone-client', requiresAuth(), (req, res) => {
   // Make sure the required data is there
   if(!req.query.number) return res.sendStatus(400);
   // Get the orgId from Auth0
@@ -343,7 +343,7 @@ app.get('/customer', requiresAuth(), (req, res) => {
   )
   // Send internalIdentifer and number to database for query
   .then(
-    response => axios.get(`${DB_URL}/customer?number=${req.query.number}&internalId=${response.data.client.InternalIdentifier}`, getAuthHeader()),
+    response => axios.get(`${DB_URL}/phone-client?number=${req.query.number}&internalId=${response.data.client.InternalIdentifier}`, getAuthHeader()),
     err => {
       console.error(`Error while getting user from Auth0: ${err}`);
       res.sendStatus(400);
@@ -352,7 +352,7 @@ app.get('/customer', requiresAuth(), (req, res) => {
   // Return response
   .then(
     response => {
-      const customerName = `${response.data.customer.FirstName.trim()} ${response.data.customer.LastName.trim()}`;
+      const customerName = `${response.data.phoneClient.FirstName.trim()} ${response.data.phoneClient.LastName.trim()}`;
       res.send({name: customerName})
     },
     err => {
@@ -384,6 +384,48 @@ app.get('/client', requiresAuth(), (req, res) => {
   )
 });
 
+// Gets the phone clients in the organization
+app.get('/phone-clients', requiresAuth(), (req, res) => {
+  var orgId;
+  // Get the pagination data from the query
+  var clientsPerPage = 10, pageNumber = 0;
+  if(req.query.clientsPerPage) {
+    clientsPerPage = req.query.clientsPerPage;
+  }
+  if(req.query.pageNumber) {
+    pageNumber = req.query.pageNumber;
+  }
+  // Get the org id from the Auth0 database
+  getUser(req.oidc.user.email)
+  // Get the internal id from orion
+  .then(
+    user => {
+      orgId = user[0].app_metadata.orgId;
+      return axios.get(`${DB_URL}/client?id=${orgId}`, getAuthHeader());
+    },
+    err => {
+      console.error(`Error while getting user from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Get the Phone clients from Orion
+  .then(
+    response => {
+      axios.get(`${DB_URL}/phone-clients?internalId=${response.data.client.InternalIdentifier}&page=${pageNumber}&limit=${clientsPerPage}`, getAuthHeader())
+      .then(
+        response => {
+          console.log(response.data);
+          res.send(response.data)
+        },
+        err => {
+          res.sendStatus(400);
+          console.error(`Error while retrieiving customers in orgainization: ${err}`);
+        }
+      )
+    }
+  )
+});
+
 // Creates a new phone client in the orion database
 app.post('/phone-client', requiresAuth(), (req, res) => {
   var orgId;
@@ -404,9 +446,8 @@ app.post('/phone-client', requiresAuth(), (req, res) => {
   )
   // Make the request to create the new phone client
   .then(
-    response => axios.post(`${DB_URL}/client`, {
+    response => axios.post(`${DB_URL}/phone-client`, {
       internalId: response.data.client.InternalIdentifier,
-      clientId: orgId,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       number: req.body.number

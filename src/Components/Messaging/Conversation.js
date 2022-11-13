@@ -34,6 +34,7 @@ import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
 import './Conversation.css';
 import { useGetCurrentUser } from './Hooks';
 import Message from './Message';
+import CustomerListSelectModal from './CustomerSelectModal';
 
 // Joins existing conversation or creates new one if no conversation between client and customer exists already
 const joinConversation = (destination, client, setStatus) => {
@@ -169,7 +170,7 @@ function Conversation(props) {
   const currUser = useGetCurrentUser();
   const [title, setTitle] = useState(null);
   const [showCustomerListModal, setShowCustomerListModal] = useState(false);
-  const [showCustomerProfileModal, setShowCUstomerProfileModal] = useState(false);
+  const [showCustomerProfileModal, setShowCustomerProfileModal] = useState(false);
   const [conversationStatusMessage, setConversationStatusMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileRow, setFileRow] = useState(null);
@@ -184,7 +185,6 @@ function Conversation(props) {
     const msgs = [];
     for (var i = 0; i < state.messaging.currentMessages.length; i++) {
       const msg = state.messaging.currentMessages[i];
-      console.log(msg);
       msgs.push(<Message 
         msg={msg} 
         lastElementRef={i === state.messaging.currentMessages.length - 1 ? lastElementRef : null}
@@ -240,7 +240,6 @@ function Conversation(props) {
           }
         })
         const classNames = msgPaginator.items.map(msg => {
-          console.log(msg.dateCreated)
           const msgArr = [msg.state.sid, msg.state.index, msg.author, msg.dateCreated];
           return msg.author === currUser.id ? [OUTBOUND_MSG, ...msgArr] : [INBOUND_MSG, ...msgArr];
         });
@@ -272,12 +271,13 @@ function Conversation(props) {
 
   // Used to set the title of the conversation container header
   useEffect(() => {
-    if(convo) {
-      setTitle(<div className='convo-title bold' onClick={_ => setShowCUstomerProfileModal(true)}>{convoData.title}</div>);
-    } else if (!convo) {
-      setTitle(<div className='convo-title bold' onClick={_ => {setShowCustomerListModal(true)}}>Choose Destination</div>);
+    if(convoData) {
+      setTitle(<div className='convo-title bold' onClick={() => setShowCustomerProfileModal(true)}>{convoData.title}</div>);
+    } else if (!convoData) {
+      console.log('Creating destination title');
+      setTitle(<div className='convo-title bold' onClick={() => setShowCustomerListModal(true)}>Choose Destination</div>);
     }
-  }, [convo]);
+  }, [convoData]);
 
   useEffect(() => {
     if(!lastElementRef.current) return;
@@ -335,6 +335,7 @@ function Conversation(props) {
         </div>
       </Card.Footer>
     </Card>
+    <CustomerListSelectModal show={showCustomerListModal} onHide={() => setShowCustomerListModal(false)}/>
   </>);
 }
 

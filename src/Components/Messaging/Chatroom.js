@@ -118,10 +118,9 @@ function Chatroom(props) {
     // Get the name of the participant in the conversation
     .then(
       convos => {
-        console.log(convos);
         conversations = convos.items;
         return Promise.all(
-          convos.items.map(convo => axios.get(`${HOST}/customer?number=${convo.friendlyName.slice(2)}`))
+          convos.items.map(convo => axios.get(`${HOST}/phone-client?number=${convo.friendlyName.slice(2)}`))
         )
       },
       err => console.error(`Error while getting subscribed conversations: ${err}`)
@@ -132,6 +131,7 @@ function Chatroom(props) {
         for(var i = 0; i < conversations.length; i++) {
           const convo = conversations[i];
           const convoTitle = vals[i].data.name ? vals[i].data.name : convo.friendlyName;
+          console.log(`Convo title: ${convoTitle}`);
           convoData.push({
             sid: convo.sid,
             title: convoTitle,
