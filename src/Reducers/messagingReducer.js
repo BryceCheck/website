@@ -52,6 +52,7 @@ export const messagingSlice = createSlice({
     },
     editConversationTitle: (state, action) => {
       state.conversations.find(convo => convo.sid === action.payload.sid).title = action.payload.title;
+      if(state.selectedConvo.sid === action.payload.sid) state.selectedConvo.title = action.payload.title;
     },
     newConversation: (state, action) => {
       for(var i = 0; i < state.conversations.length; i++) {

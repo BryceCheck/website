@@ -352,12 +352,11 @@ app.get('/phone-client', requiresAuth(), (req, res) => {
   // Return response
   .then(
     response => {
-      const customerName = `${response.data.phoneClient.FirstName.trim()} ${response.data.phoneClient.LastName.trim()}`;
-      res.send({name: customerName})
+      res.send(response.data.phoneClient);
     },
     err => {
       console.error(`Error while getting customer id from phone number from orion: ${err}`);
-      res.send({name: ''});
+      res.sendStatus(404);
     }
   )
 })
@@ -465,12 +464,13 @@ app.post('/phone-client', requiresAuth(), (req, res) => {
 });
 
 app.patch('/phone-client', requiresAuth(), (req, res) => {
-  if (!req.body.firstName || !req.body.lastName || !req.body.number) return res.sendStatus(400);
+  console.log(req.body);
+  if (!req.body.FirstName || !req.body.LastName || !req.body.CellPhone) return res.sendStatus(400);
   // Get the orgId from from the auth0 user
-  getUser()
+  getUser(req.oidc.user.email)
   // Get the client information from orion
   .then(
-    user => axios.get(`${DB_URL}/client?id=${user[0].app_metadata.orgId}`),
+    user => axios.get(`${DB_URL}/client?id=${user[0].app_metadata.orgId}`, getAuthHeader()),
     err => {
       console.error(`Error while retrieving user info from Auth0: ${err}`);
       res.sendStatus(400);
@@ -479,9 +479,7 @@ app.patch('/phone-client', requiresAuth(), (req, res) => {
   // Update the name of the client on the orion api
   .then(
     response => axios.patch(`${DB_URL}/phone-client`, {
-      number: req.body.number,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
+      ...req.body,
       internalId: response.data.client.InternalIdentifier
     }, getAuthHeader()),
     err => {
@@ -491,7 +489,7 @@ app.patch('/phone-client', requiresAuth(), (req, res) => {
   )
   // Return status to user
   .then(
-    _ => {},
+    _ => res.sendStatus(200),
     err => {
       console.error(`Error while retrieving client information from Orion: ${err}`);
       res.sendStatus(400);

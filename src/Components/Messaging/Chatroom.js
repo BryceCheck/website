@@ -19,6 +19,7 @@ import Sidebar from './Sidebar';
 import Conversation from './Conversation';
 import { useGetCurrentUser } from './Hooks';
 import { HOST, OUTBOUND_MSG, INBOUND_MSG, TOKEN_ENDPOINT } from '../../consts';
+import { parseName } from '../../utils';
 
 import { initialize, newConversation, leaveConversation, addMessage, setMessageToUnread } from '../../Reducers/messagingReducer';
 
@@ -101,7 +102,8 @@ function Chatroom(props) {
         axios.get(`${HOST}/phone-client?number=${convo.friendlyName.slice(2)}`)
         .then(
           res => {
-            const title = res.data.name ? res.data.name : convo.uniqueName;
+            var title = parseName(res.data.FirstName, res.data.LastName);
+            title = title ? title : convo.uniqueName;
             dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
           },
           err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
@@ -112,7 +114,8 @@ function Chatroom(props) {
         axios.get(`${HOST}/phone-client?number=${convo.friendlyName.slice(2)}`)
         .then(
           res => {
-            const title = res.data.name ? res.data.name : convo.uniqueName;
+            var title = parseName(res.data.FirstName, res.data.LastName);
+            title = title ? title : convo.uniqueName;
             dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
           },
           err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
@@ -142,11 +145,11 @@ function Chatroom(props) {
         const convoData = [];
         for(var i = 0; i < conversations.length; i++) {
           const convo = conversations[i];
-          const convoTitle = vals[i].data.name ? vals[i].data.name : convo.friendlyName;
-          console.log(`Convo title: ${convoTitle}`);
+          var title = parseName(vals[i].data.FirstName, vals[i].data.LastName);
+          title = title ? title : convo.uniqueName;
           convoData.push({
             sid: convo.sid,
-            title: convoTitle,
+            title: title,
             isRead: true
           });
         }

@@ -1,0 +1,36 @@
+.customer-profile-body-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.customer-profile-row {
+    display: flex;   
+}
+
+.title {
+    width: 120px;
+}
+
+.profile-error {
+    color: red;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.left-aligned {
+    text-align: left;
+}
+
+.items-left {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.centered-margins {
+    margin-left: auto;
+    margin-right: auto;
+}

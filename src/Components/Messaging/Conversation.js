@@ -17,24 +17,24 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark, faPaperclip, faPaperPlane,
-         faSms, faEnvelope, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
+         faSms, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
 // home brewed imports
-import { selectConversation, setMessages, addPreviousMessages, editConversationTitle, setEditingConversationTitle } from '../../Reducers/messagingReducer';
+import { selectConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
 import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH, 
          OUTBOUND_MSG,
          INBOUND_MSG,
          MESSAGE_BLOCK_SIZE,
-         HOST,
-         MAX_NAME_LENGTH} from '../../consts';
+         HOST,} from '../../consts';
 
 import './Conversation.css';
 import { useGetCurrentUser } from './Hooks';
 import Message from './Message';
 import CustomerListSelectModal from './CustomerSelectModal';
+import CustomerProfileModal from './CustomerProfileModal';
 
 // Joins existing conversation or creates new one if no conversation between client and customer exists already
 const joinConversation = (destination, client, setStatus) => {
@@ -335,6 +335,7 @@ function Conversation(props) {
         </div>
       </Card.Footer>
     </Card>
+    <CustomerProfileModal client={props.client} convo={convo} show={showCustomerProfileModal} onHide={() => setShowCustomerProfileModal(false)}/>
     <CustomerListSelectModal client={props.client} show={showCustomerListModal} onHide={() => setShowCustomerListModal(false)}/>
   </>);
 }

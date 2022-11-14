@@ -11,7 +11,7 @@ import { HOST } from "../../consts";
     
 import './CustomerSelectModal.css';
 
-const addConversation = (client, destinationNumber, dispatch, onHide) => {
+const addConversation = (client, destinationNumber, onHide) => {
   const formattedNumber = `+1${destinationNumber}`;
   // See if the conversation already exists
   client.getConversationByUniqueName(formattedNumber)
@@ -58,7 +58,7 @@ const CustomerListSelectModal = (props) => {
             return <div 
               className='client-list-item' 
               key={client.ClientId}
-              onClick={() => addConversation(props.client.current, client.CellPhone, dispatch, props.onHide)}
+              onClick={() => addConversation(props.client.current, client.CellPhone, props.onHide)}
             >
               {`${client.FirstName} ${client.LastName}`}
             </div>;
