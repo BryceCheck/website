@@ -335,7 +335,7 @@ function Conversation(props) {
         </div>
       </Card.Footer>
     </Card>
-    <CustomerListSelectModal show={showCustomerListModal} onHide={() => setShowCustomerListModal(false)}/>
+    <CustomerListSelectModal client={props.client} show={showCustomerListModal} onHide={() => setShowCustomerListModal(false)}/>
   </>);
 }
 

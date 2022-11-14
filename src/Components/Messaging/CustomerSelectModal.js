@@ -1,20 +1,44 @@
 import Modal from "react-bootstrap/Modal";
 import { useState, useEffect } from 'react';
+import { useDispatch } from "react-redux";
+import { changeConversation } from "../../Reducers/messagingReducer";
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-
 import axios from "axios";
+
 import { HOST } from "../../consts";
     
 import './CustomerSelectModal.css';
-import { useGetCurrentUser } from "./Hooks";
+
+const addConversation = (client, destinationNumber, dispatch, onHide) => {
+  const formattedNumber = `+1${destinationNumber}`;
+  // See if the conversation already exists
+  client.getConversationByUniqueName(formattedNumber)
+  // Return the conversation sid if it does exist
+  .then(
+    convo => {return {data: {sid: convo.sid}}},
+    // If it doesn't exist, create the convo
+    err => {
+      console.log(`Error while getting conversation by unique name: ${err}`);
+      console.log(`Conversation with ${destinationNumber} doesn't exist. Creating new conversation`);
+      return axios.post('/join-convo', {destination: formattedNumber})
+    }
+  )
+  // set the selected conversation to the new conversation and hide the modal
+  .then(
+    res => {
+      onHide();
+    },
+    err => console.error(`Error while joining conversation with ${formattedNumber}: ${err}`)
+  )
+}
 
 const CustomerListSelectModal = (props) => {
 
   const [phoneClientsBody, setPhoneClientsBody] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
-  const [selectedRecipient, setSelectedRecipient] = useState(null);
-  const currUser = useGetCurrentUser();
+  const dispatch = useDispatch();
 
   // Refresh the list of reps everytime the display is turned on, clear it when it's turned off
   useEffect(() => {
@@ -30,12 +54,11 @@ const CustomerListSelectModal = (props) => {
             </button>
           </div>
         } else {
-          console.log(res.data);
           body = res.data.phoneClients.map(client => {
             return <div 
               className='client-list-item' 
-              key={client.ClientId} 
-              onClick={() => setSelectedRecipient(client.ClientId)}
+              key={client.ClientId}
+              onClick={() => addConversation(props.client.current, client.CellPhone, dispatch, props.onHide)}
             >
               {`${client.FirstName} ${client.LastName}`}
             </div>;
@@ -51,21 +74,16 @@ const CustomerListSelectModal = (props) => {
     ).catch(console.error);
 
     return () => {setPhoneClientsBody([])};
-  }, [currUser]);
+  }, []);
   
   return <Modal show={props.show} onHide={props.onHide} centered className='textit-modal'>
-    <Modal.Header centered>
-      <h1>Choose Customer</h1>
+    <Modal.Header className='modal-title'>
+      <h1 className='modal-title-text'>Choose Customer</h1>
     </Modal.Header>
     <Modal.Body centered>
       <div className='modal-status-container'>{statusMessage}</div>
       {phoneClientsBody}
     </Modal.Body>
-    <Modal.Footer style={{justifyContent: 'center'}}>
-      <button className='accept-button' onClick={() => props.handleAccept(selectedRecipient, setStatusMessage, currUser)}>
-        Start Conversation
-      </button>
-    </Modal.Footer>
   </Modal>
 }
 

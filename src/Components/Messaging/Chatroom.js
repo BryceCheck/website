@@ -98,13 +98,25 @@ function Chatroom(props) {
       var newClient = new ConversationsClient(data.accessToken);
       client.current = newClient;
       client.current.on("conversationAdded", convo => {
-        console.log('new conversation added:', convo);
-        const convoData = {sid: convo.sid, title: convo.uniqueName ? convo.uniqueName : ''};
-        dispatch(newConversation(convoData));
+        axios.get(`${HOST}/phone-client?number=${convo.friendlyName.slice(2)}`)
+        .then(
+          res => {
+            const title = res.data.name ? res.data.name : convo.uniqueName;
+            dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
+          },
+          err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
+        );
       })
       client.current.on("conversationJoined", convo => {
-        const convoData = {sid: convo.sid, title: convo.uniqueName ? convo.uniqueName : ''};
-        dispatch(newConversation(convoData));
+        console.log('conversation joined');
+        axios.get(`${HOST}/phone-client?number=${convo.friendlyName.slice(2)}`)
+        .then(
+          res => {
+            const title = res.data.name ? res.data.name : convo.uniqueName;
+            dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
+          },
+          err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
+        );
       });
       client.current.on("conversationLeft", convo => {
         const convoData = {sid: convo.sid, title: convo.friendlyName ? convo.friendlyName : ''};

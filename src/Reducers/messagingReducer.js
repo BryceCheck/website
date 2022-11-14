@@ -26,6 +26,10 @@ export const messagingSlice = createSlice({
       if(action.payload === null) return;
       state.conversations.find(convo => convo.sid === action.payload.sid).isRead = true;
     },
+    changeConversation: (state, action) => {
+      if(!action.payload) return;
+      state.selectedConvo = state.conversations.find(convo => convo.sid === action.payload);
+    },
     leaveConversation: (state, action) => {
       state.conversations = state.conversations.filter(convo => convo.sid !== action.payload.sid);
       // find the next conversation which isn't the one we're deleting
@@ -62,6 +66,18 @@ export const messagingSlice = createSlice({
   }
 });
 
-export const { initialize, selectConversation, newConversation, leaveConversation, setMessages, addMessage, editConversationTitle, setEditingConversationTitle, setMessageToUnread, addPreviousMessages } = messagingSlice.actions;
+export const { 
+  initialize,
+  selectConversation,
+  newConversation,
+  changeConversation,
+  leaveConversation,
+  setMessages,
+  addMessage,
+  editConversationTitle,
+  setEditingConversationTitle,
+  setMessageToUnread,
+  addPreviousMessages 
+} = messagingSlice.actions;
 
 export default messagingSlice.reducer;

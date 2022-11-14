@@ -77,17 +77,9 @@ function Sidebar(props) {
         </Card.Title>
         <ListGroup>
           {conversations.map(convo => {
-            var initials;
-            const names = convo.title.split();
-            if (names.length === 1) {
-              initials = convo.title;
-            } else if (names.length === 2) {
-              initials = names[0][0] + names[1][0];
-            } else {
-              initials = '??';
-            }
+            console.log('Conversation:', convo);
             return <SidebarContactListItem
-              initials={initials}
+              initials={convo.title}
               collapsed={collapsed}
               sid={convo.sid}
               key={convo.sid}
