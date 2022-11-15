@@ -456,6 +456,8 @@ app.post('/phone-client', requiresAuth(), (req, res) => {
       res.sendStatus(400);
     }
   )
+  // Create a new conversation with the phone client
+  
   // Return the status to the client
   .then(
     _ => res.sendStatus(200),

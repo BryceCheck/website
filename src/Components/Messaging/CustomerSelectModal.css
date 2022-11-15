@@ -18,3 +18,33 @@
 .modal-title-text {
     margin: auto;
 }
+
+.modal-status-container {
+    color: red;
+    text-align: center;
+}
+
+.add-client-button {
+    margin: 10px 0;
+}
+
+.button-container {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    width: 175px;
+}
+
+.rounded-button {
+    border-radius: 3px;
+}
+
+.select-body-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.submit-button {
+    margin: 10px 0;
+}
