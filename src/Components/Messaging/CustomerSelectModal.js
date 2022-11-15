@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
-import { HOST } from "../../consts";
+import { HOST, MAX_PHONE_NUMBER_LENGTH, MAX_QUERY_LENGTH } from "../../consts";
     
 import './CustomerSelectModal.css';
 import { handleFieldChange } from "../../utils";
@@ -69,8 +69,55 @@ const handleProfileCreation = (customerInfo, setError, setIsCreating, onHide, se
   )
 }
 
+const createClientRows = (twilioClient, clients, onHide) => {
+  return clients.map(client => {
+    return <div 
+      className='client-list-item' 
+      key={client.ClientId}
+      onClick={() => addConversation(twilioClient.current, client.CellPhone, onHide)}
+    >
+      {`${client.FirstName} ${client.LastName}`}
+    </div>;
+  });
+}
+
+const handleQuery = (e, setQueryString, setStatusMessage, setPhoneClientsBody, client, onHide) => {
+  // Validate the input from the user
+  if (e.target.value.length > MAX_QUERY_LENGTH) {
+    return setStatusMessage('Search too long');
+  }
+  // Decide if the query is a name or number and format
+  var query = '';
+  if(/^[a-zA-Z() ]*$/.test(e.target.value)) {
+    const names = e.target.value.split();
+    if (names.length === 1) {
+      query=`?firstName=${names[0]}`
+    } else if(names.length >2) {
+      query=`?firstName=${names[0]}&lastName=${names.slice(1).join(' ')}`
+    }
+  } else if(/^\d+$/.test(e.target.value)) {
+    if(e.target.value.length > MAX_PHONE_NUMBER_LENGTH) {
+      return setStatusMessage(`Phone numbers are only 10 digits long`);
+    }
+    query=`?number=${e.target.value}`
+  } else {
+    return setStatusMessage(`Please enter a valid name or number. Only numbers and letters`);
+  }
+  // Execute the query and the callback will update the display
+  setQueryString(e.target.value);
+  return axios.get(`/phone-clients${query}`)
+  .then(
+    res => setPhoneClientsBody(createClientRows(client, res.data.phoneClients, onHide)),
+    err => {
+      setStatusMessage('Error while getting customer list');
+      console.error(`Error while getting customer list: ${err}`);
+    }
+  )
+}
+
 const CustomerListSelectModal = (props) => {
 
+  const [queryString, setQueryString] = useState('');
   const [phoneClientsBody, setPhoneClientsBody] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [newClient, setNewClient] = useState({});
@@ -97,7 +144,6 @@ const CustomerListSelectModal = (props) => {
           </div>
         </div>];
         if(isCreating) {
-          console.log('new client:', newClient);
           body.push(
             <table>
               <tr>
@@ -157,6 +203,7 @@ const CustomerListSelectModal = (props) => {
     </Modal.Header>
     <Modal.Body centered className="phone-clients-container">
       <div className='select-body-container'>
+        <input style={{display: isCreating ? 'none' : 'inline-block'}} value={queryString} onChange={e => handleQuery(e, setQueryString, setStatusMessage, setPhoneClientsBody, props.client, props.onHide)}/>
         {phoneClientsBody}
       </div> 
       <div className='modal-status-container'>{statusMessage}</div>

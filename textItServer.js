@@ -387,12 +387,23 @@ app.get('/client', requiresAuth(), (req, res) => {
 app.get('/phone-clients', requiresAuth(), (req, res) => {
   var orgId;
   // Get the pagination data from the query
-  var clientsPerPage = 10, pageNumber = 0;
+  var clientsPerPage = 10, pageNumber = 0, firstName = '', lastName = '', number='';
   if(req.query.clientsPerPage) {
     clientsPerPage = req.query.clientsPerPage;
   }
   if(req.query.pageNumber) {
     pageNumber = req.query.pageNumber;
+  }
+  // Handle extra query
+  var query = '';
+  if(req.query.firstName) {
+    query = `&firstName=${req.query.firstName}`;
+  }
+  if (req.query.lastName) {
+    query += `&lastName=${req.query.lastName}`;
+  }
+  if (req.query.number) {
+    query = `&number=${req.query.number}`;
   }
   // Get the org id from the Auth0 database
   getUser(req.oidc.user.email)
@@ -410,7 +421,7 @@ app.get('/phone-clients', requiresAuth(), (req, res) => {
   // Get the Phone clients from Orion
   .then(
     response => {
-      axios.get(`${DB_URL}/phone-clients?internalId=${response.data.client.InternalIdentifier}&page=${pageNumber}&limit=${clientsPerPage}`, getAuthHeader())
+      axios.get(`${DB_URL}/phone-clients?internalId=${response.data.client.InternalIdentifier}&page=${pageNumber}&limit=${clientsPerPage}${query}`, getAuthHeader())
       .then(
         response => {
           console.log(response.data);
