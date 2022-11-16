@@ -30,8 +30,45 @@ const CALLS_PER_DAY = 'Average Calls Per Day';
 const CALLS_PER_HOUR = 'Average Calls Per Hour';
 const RECEPTIONIST_CALLS = 'Receptionist Call Counts';
 
-const generateReceptionistReport = (dat, setReport) => {
-
+const generateReceptionistReport = (data, setReport, setErrorMsg) => {
+  const receptionists = {};
+  // Create array for entries 
+  for(var i = 0; i < data.length; i++) {
+    const entry = data[i];
+    console.log(entry.UserName);
+    // Check to see if the entry has a new user from the UserName field
+    if(!receptionists.hasOwnProperty(entry.UserName)) {
+      receptionists[entry.UserName] = 1;
+    } else {
+      receptionists[entry.UserName] += 1;
+    }
+  }
+  // Create the chart from the parsed Data
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Calls By Customer Service Representatives'
+      }
+    },
+    maintainAspectRatio: false
+  }
+  const chartData = {
+    labels: Object.keys(receptionists),
+    datasets: [
+      {
+        label: 'Receptionist Calls',
+        data: Object.values(receptionists),
+        backgroundColor: 'cornflowerblue'
+      }
+    ]
+  }
+  setReport(<Bar options={options} data={chartData} height={600} width={900}/>);
+  setErrorMsg('');
 }
 
 const generateHourReport = (data, setReport, setErrorMsg) => {
@@ -176,6 +213,8 @@ const handleReportGeneration = (reportType, startDate, endDate, setErrorMsg, set
         generateDayReport(res.data, setReport, setErrorMsg);
       } else if(reportType === CALLS_PER_HOUR) {
         generateHourReport(res.data, setReport, setErrorMsg);
+      } else if(reportType === RECEPTIONIST_CALLS) {
+        generateReceptionistReport(res.data, setReport, setErrorMsg);
       }
     },
     err => {
