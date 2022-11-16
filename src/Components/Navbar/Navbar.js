@@ -10,6 +10,7 @@ function Navbar(props) {
             <Col><div className='nav-link-text'><a className='nav-bar-link' href='/'>Home</a></div></Col>
             <Col><div className='nav-link-text'><a className='nav-bar-link' href='/messages'>Messages</a></div></Col>
             <Col><div className='nav-link-text'><a className='nav-bar-link' href='/profile'>Profile</a></div></Col>
+            <Col><div className='nav-link-text'><a className='nav-bar-link' href='/report'>Reports</a></div></Col>
           </Row>
         </Container>
       </div>

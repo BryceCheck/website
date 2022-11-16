@@ -285,7 +285,7 @@ app.post('/transfer-conversation', requiresAuth(), (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 })
-app.get(['/messages', '/profile'], (req, res) => {
+app.get(['/messages', '/profile', '/report'], (req, res) => {
   req.oidc.isAuthenticated() ? res.sendFile(path.join(__dirname, 'build', 'index.html')) : res.redirect('/login');
 });
 
@@ -505,6 +505,43 @@ app.patch('/phone-client', requiresAuth(), (req, res) => {
     _ => res.sendStatus(200),
     err => {
       console.error(`Error while retrieving client information from Orion: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+})
+
+app.get('/get-report', requiresAuth(), (req, res) => {
+  // Make sure the request has the proper data
+  if(!req.query.type || !req.query.start) return res.sendStatus(400);
+  // Get the orgId to get the internal id of the user's company
+  getUser(req.oidc.user.email)
+  .then(
+    userData => axios.get(`${DB_URL}/client?id=${userData[0].app_metadata.orgId}`, getAuthHeader()),
+    err => {
+      console.error(`Error while retrieving user data from Auth0: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Get the internal identifier from the database
+  .then(
+    dbRes => {
+      var query = `${DB_URL}/reports?type=${req.query.type}&start=${req.query.start}&internalId=${dbRes.data.client.InternalIdentifier}`;
+      if(req.query.end) {
+        query += `&end=${req.query.end}`
+      }
+      console.log(query);
+      return axios.get(query, getAuthHeader());
+    },
+    err => {
+      console.error(`Error while retrieving client information from the database: ${err}`);
+      res.sendStatus(400);
+    }
+  )
+  // Return the results of the orion API query
+  .then(
+    reportResponse => res.send(reportResponse.data),
+    err => {
+      console.error(`Error while getting report data: ${err}`);
       res.sendStatus(400);
     }
   )

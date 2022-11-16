@@ -11,6 +11,7 @@ import store from './store';
 import Home from './Components/Messaging/TextItHome';
 import Chatroom from './Components/Messaging/Chatroom';
 import Profile from './Components/Messaging/Profile';
+import Reports from './Components/Messaging/Reports';
 
 import './index.css';
 
@@ -28,6 +29,7 @@ root.render(
         <Route exact path="/" element={<Home/>}/>
         <Route path="/messages" element={<Chatroom/>}/>
         <Route path="/profile" element={<Profile/>}/>
+        <Route path="/report" element={<Reports/>}/>
       </Routes>
     </Router>
   </Provider>
