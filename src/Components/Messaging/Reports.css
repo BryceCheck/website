@@ -25,6 +25,10 @@
     text-align: center;
 }
 
+.rounded-button {
+    border-radius: 3px;
+}
+
 .error-msg {
     color: red;
 }

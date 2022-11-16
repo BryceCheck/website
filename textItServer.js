@@ -529,7 +529,6 @@ app.get('/get-report', requiresAuth(), (req, res) => {
       if(req.query.end) {
         query += `&end=${req.query.end}`
       }
-      console.log(query);
       return axios.get(query, getAuthHeader());
     },
     err => {

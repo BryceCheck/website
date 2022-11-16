@@ -34,11 +34,67 @@ const generateReceptionistReport = (dat, setReport) => {
 
 }
 
-const generateHourReport = (data, setReport) => {
+const generateHourReport = (data, setReport, setErrorMsg) => {
+  // Create an array of dictionaries to store the calls per hour of different days
+  const hoursArray = [];
+  const avgArray = [];
+  const labelsArr = [];
+  // Create array for entries per hour on different days
+  for(var i = 0; i < 24; i++) {
+    hoursArray.push({});
+    const meridian = i < 12 ? 'AM' : 'PM';
+    var hour = i % 12;
+    hour = hour === 0 ? 12 : hour;
+    labelsArr.push(`${hour} ${meridian}`);
+  }
+  // Enter number of calls per hour on different days
+  for (var i = 0; i < data.length; i++) {
+    const entry = data[i];
+    const start = DateTime.fromISO(entry.StartTime);
+    if(hoursArray[start.hour].hasOwnProperty(start.toISODate())) {
+      hoursArray[start.hour][start.toISODate()] += 1;
+    } else {
+      hoursArray[start.hour][start.toISODate()] = 1;
+    }
+    console.log(hoursArray[start.hour].hasOwnProperty(start.toISODate()));
+  }
+  // Find the average calls per hour across the time series
+  for(var i = 0; i < 24; i++) {
+    const vals = Object.values(hoursArray[i]);
+    const sum = vals.reduce((prev, curr) => prev + curr);
+    const samples = vals.length;
+    avgArray.push(sum/samples);
+  }
+  // Create the chart based upon the processed Data
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Avg. Calls Per Hour'
+      }
+    },
+    maintainAspectRatio: false
+  }
+  const chartData = {
+    labels: labelsArr,
+    datasets: [
+      {
+        label: 'Avg. Calls',
+        data: avgArray,
+        backgroundColor: 'cornflowerblue'
+      }
+    ]
+  }
+  setReport(<Bar options={options} data={chartData} height={600} width={900}/>);
+  setErrorMsg('');
 
 }
 
-const generateDayReport = (data, setReport) => {
+const generateDayReport = (data, setReport, setErrorMsg) => {
   // Create an array of dictionaries to store the calls per day of different days
   const daysArray = [];
   const avgArray = [];
@@ -48,7 +104,7 @@ const generateDayReport = (data, setReport) => {
   // Divide data based upon day
   for(var i = 0; i < data.length; i++) {
     const entry = data[i];
-    const start = DateTime.fromISO(entry.StartTime)
+    const start = DateTime.fromISO(entry.StartTime);
     if(daysArray[start.weekday - 1].hasOwnProperty(start.toISODate())) {
       daysArray[start.weekday - 1][start.toISODate()] += 1;
     } else {
@@ -86,8 +142,8 @@ const generateDayReport = (data, setReport) => {
       }
     ]
   }
-  console.log(options);
   setReport(<Bar options={options} data={chartData} height={600} width={900}/>);
+  setErrorMsg('');
 }
 
 const handleReportGeneration = (reportType, startDate, endDate, setErrorMsg, setReport) => {
@@ -117,7 +173,9 @@ const handleReportGeneration = (reportType, startDate, endDate, setErrorMsg, set
   .then(
     res => {
       if (reportType === CALLS_PER_DAY) {
-        generateDayReport(res.data, setReport);
+        generateDayReport(res.data, setReport, setErrorMsg);
+      } else if(reportType === CALLS_PER_HOUR) {
+        generateHourReport(res.data, setReport, setErrorMsg);
       }
     },
     err => {
@@ -150,7 +208,7 @@ const Reports = (props) => {
             <input className='date-input h-spaced' type='date' value={startDate} onChange={e => setStartDate(e.target.value)}/>
             <input className='date-input h-spaced' type='date' value={endDate} onChange={e => setEndDate(e.target.value)}/>
           </div>
-          <button className='report-button spaced' onClick={_ => handleReportGeneration(reportType, startDate, endDate, setErrorMsg, setReport)}>
+          <button className='rounded-button spaced' onClick={_ => handleReportGeneration(reportType, startDate, endDate, setErrorMsg, setReport)}>
             Generate Report
           </button>
         </div>
