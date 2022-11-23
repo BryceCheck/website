@@ -13,11 +13,15 @@ import { handleFieldChange } from "../../utils";
 
 const addConversation = (client, destinationNumber, onHide) => {
   const formattedNumber = `+1${destinationNumber}`;
+  console.log(`Formatted Number: ${formattedNumber}`);
   // See if the conversation already exists
   client.getConversationByUniqueName(formattedNumber)
   // Return the conversation sid if it does exist
   .then(
-    convo => {return {data: {sid: convo.sid}}},
+    convo => {
+      console.log(`Found existing conversation: ${convo.sid}`);
+      return {data: {sid: convo.sid}}
+    },
     // If it doesn't exist, create the convo
     err => {
       console.log(`Error while getting conversation by unique name: ${err}`);
@@ -35,9 +39,12 @@ const addConversation = (client, destinationNumber, onHide) => {
 }
 
 const handleProfileCreation = (customerInfo, setError, setIsCreating, onHide, setNewClient) => {
-  console.log(customerInfo);
+  console.log(customerInfo.CellPhone);
   // Make sure the data is formatted properly
-  if(customerInfo.CellPhone.length !== 10 || (customerInfo.HomePhone.length !== 10 && customerInfo.HomePhone.length !== 0)) {
+  if(!customerInfo.CellPhone) {
+    return setError(`Please enter a cell phone number to start the texting conversation.`);
+  }
+  if((customerInfo.CellPhone.length !== 10) || (customerInfo.HomePhone && customerInfo.HomePhone.length !== 10)) {
     return setError('Phone numbers must be 10 digits long');
   }
   // Create the phone client

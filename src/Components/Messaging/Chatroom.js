@@ -104,9 +104,12 @@ function Chatroom(props) {
           res => {
             var title = parseName(res.data.FirstName, res.data.LastName);
             title = title ? title : convo.uniqueName;
-            dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
+            dispatch(newConversation({sid: convo.sid, title: title, isRead: false}));
           },
-          err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
+          err => {
+            console.error(`Error while retrieving phone client name for new conversation: ${err}`);
+            dispatch(newConversation({sid: convo.sid, title: convo.uniqueName, isRead: false}));
+          }
         );
       })
       client.current.on("conversationJoined", convo => {
@@ -116,9 +119,12 @@ function Chatroom(props) {
           res => {
             var title = parseName(res.data.FirstName, res.data.LastName);
             title = title ? title : convo.uniqueName;
-            dispatch(newConversation({sid: convo.sid, title: title, isRead: true}));
+            dispatch(newConversation({sid: convo.sid, title: title, isRead: false}));
           },
-          err => console.error(`Error while retrieving phone client name for new conversation: ${err}`)
+          err => {
+            console.error(`Error while retrieving phone client name for new conversation: ${err}`);
+            dispatch(newConversation({sid: convo.sid, title: convo.uniqueName, isRead: false}));
+          }
         );
       });
       client.current.on("conversationLeft", convo => {

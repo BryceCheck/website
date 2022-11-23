@@ -15,7 +15,7 @@ const KeyToDisplayMap = {
   HomePhone: 'Home Phone',
 }
 
-const getCustomerInformation = (number, setCustomerInfo, setErrorMsg) => {
+const getCustomerInformation = (number, setCustomerInfo, setErrorMsg, setIsNew) => {
   // Request the customer information from the backend
   axios.get(`/phone-client?number=${number}`)
   // Return the values of the fields to be displayed on the customer profile
@@ -27,9 +27,14 @@ const getCustomerInformation = (number, setCustomerInfo, setErrorMsg) => {
       }
       setCustomerInfo(res.data);
     },
-    err => {
-      setErrorMsg('Cannot get customer information! Please, try again later.');
-      console.error(`Error while retrieving customer profile: ${err}`);
+    _ => {
+      setCustomerInfo({
+        'FirstName': '',
+        'LastName': '',
+        'HomePhone': '',
+        'CellPhone': number
+      });
+      setIsNew(true);
     }
   )
 };
@@ -50,17 +55,39 @@ const handleProfileChangeSubmit = (customerInfo, convo, setError, setIsEditing, 
   )
 }
 
+const handleProfileCreation = (customerInfo, convo, setError, setIsEditing, setIsNew, dispatch, onHide) => {
+  axios.post('/phone-client', {
+    number: customerInfo.CellPhone,
+    firstName: customerInfo.FirstName,
+    lastName: customerInfo.LastName
+  })
+  .then(
+    _ => {
+      setError('');
+      setIsEditing(false);
+      setIsNew(false);
+      dispatch(editConversationTitle({sid: convo.sid, title: `${customerInfo.FirstName} ${customerInfo.LastName}`}));
+      onHide();
+    },
+    err => {
+      setError('Error while creating new phone client! Please try again later!');
+      setIsEditing(false);
+    }
+  )
+}
+
 const CustomerProfileModal = (props) => {
 
-  const [customerInfo, setCustomerInfo] = useState({});
+  const [customerInfo, setCustomerInfo] = useState({'FirstName': '', 'LastName': '', 'HomePhone': '', 'CellPhone': ''});
   const [isEditing, setIsEditing] = useState(false);
+  const [isNew, setIsNew] = useState(false);
   const [profileBody, setProfileBody] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const dispatch = useDispatch();
 
   useEffect(() => {
     if(!props.convo) return;
-    getCustomerInformation(props.convo.uniqueName.slice(2), setCustomerInfo, setErrorMsg);
+    getCustomerInformation(props.convo.uniqueName.slice(2), setCustomerInfo, setErrorMsg, setIsNew);
   }, [props.show, props.convo]);
 
   useEffect(() => {
@@ -100,7 +127,13 @@ const CustomerProfileModal = (props) => {
       </Modal.Body>
       <Modal.Footer className=''>
         <button onClick={_ => {
-          isEditing ? handleProfileChangeSubmit(customerInfo, props.convo, setErrorMsg, setIsEditing, dispatch, props.onHide) : setIsEditing(true)
+          if(isEditing && !isNew) {
+            handleProfileChangeSubmit(customerInfo, props.convo, setErrorMsg, setIsEditing, dispatch, props.onHide);
+          } else if (isEditing && isNew) {
+            handleProfileCreation(customerInfo, props.convo, setErrorMsg, setIsEditing, setIsNew, dispatch, props.onHide);
+          } else if(!isEditing) {
+            setIsEditing(true);
+          }
         }}>{isEditing ? 'Submit' : 'Edit'}</button>
         <button style={{display: isEditing ? 'block' : 'none'}} onClick={_ => setIsEditing(false)}>Cancel</button>
       </Modal.Footer>

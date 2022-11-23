@@ -477,8 +477,9 @@ app.post('/phone-client', requiresAuth(), (req, res) => {
 });
 
 app.patch('/phone-client', requiresAuth(), (req, res) => {
-  console.log(req.body);
+  console.log('patching phone client:', req.body);
   if (!req.body.FirstName || !req.body.LastName || !req.body.CellPhone) return res.sendStatus(400);
+  console.log('here');
   // Get the orgId from from the auth0 user
   getUser(req.oidc.user.email)
   // Get the client information from orion
@@ -502,7 +503,10 @@ app.patch('/phone-client', requiresAuth(), (req, res) => {
   )
   // Return status to user
   .then(
-    _ => res.sendStatus(200),
+    _ => {
+      console.log('patched');
+      res.sendStatus(200)
+    },
     err => {
       console.error(`Error while retrieving client information from Orion: ${err}`);
       res.sendStatus(400);
