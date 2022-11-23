@@ -23,12 +23,7 @@ function SidebarContactListItem(props) {
   const currConvoId = useSelector(state => state.messaging.selectedConvo ? state.messaging.selectedConvo.sid : null);
   const isRead = useSelector(state => {
     const isConvoRead = state.messaging.conversations ? state.messaging.conversations.find(convo => convo.sid === props.sid).isRead : true;
-    const isCurrentConvo = currConvoId === props.sid;
-    if(isCurrentConvo) {
-      return true;
-    } else {
-      return isConvoRead;
-    }
+    return isConvoRead;
   });
   const dispatch = useDispatch();
 

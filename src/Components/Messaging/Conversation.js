@@ -22,7 +22,7 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import axios from 'axios';
 
 // home brewed imports
-import { selectConversation, setMessages, addPreviousMessages } from '../../Reducers/messagingReducer';
+import { selectConversation, setMessages, addPreviousMessages, setMessageToRead } from '../../Reducers/messagingReducer';
 import { MAX_FILE_SIZE, ALLOWABLE_FILE_EXTENSIONS,
          MAX_MESSAGE_LENGTH, 
          OUTBOUND_MSG,
@@ -140,7 +140,7 @@ const handleFileUpload = (event, setStatus, setSelectedFile) => {
   setStatus('');
 }
 
-const sendMessage = (convo, message, file, setStatus, setMessage, setFile, fileRef) => {
+const sendMessage = (convo, message, file, setStatus, setMessage, setFile, fileRef, dispatch) => {
   // If the convo is null then this is a new message to a new conversation
   if(convo === null) return;
   // Check the length of the message
@@ -265,7 +265,7 @@ function Conversation(props) {
     }
     fetchMessages();
     if(message) {
-      sendMessage(convo, message, selectedFile, setConversationStatusMessage, setMessage, setSelectedFile, fileUploadRef.current);
+      sendMessage(convo, message, selectedFile, setConversationStatusMessage, setMessage, setSelectedFile, fileUploadRef.current, dispatch);
     }
   }, [convo]);
 
@@ -311,12 +311,15 @@ function Conversation(props) {
       <Card.Footer>
         {/* Display a text input for the user to be able to send out a text message */}
         <div className='convo-input-container'>
-          <input value={message} onChange={e => setMessage(e.target.value)} placeholder="Message..." className="convo-text-input"/>
+          <input value={message} onChange={e => {
+            if(convo) dispatch(setMessageToRead(convo.sid));
+            setMessage(e.target.value);
+          }} placeholder="Message..." className="convo-text-input"/>
           <button className='convo-send-button' onClick={() => {
             if (convo === null) {
               joinConversation(destinationRef.current.value, props.client.current, setConversationStatusMessage);
             } else {
-              sendMessage(convo, message, selectedFile, setConversationStatusMessage, setMessage, setSelectedFile, fileUploadRef.current);
+              sendMessage(convo, message, selectedFile, setConversationStatusMessage, setMessage, setSelectedFile, fileUploadRef.current, dispatch);
             }
           }}>
             <FontAwesomeIcon icon={faPaperPlane}/>
