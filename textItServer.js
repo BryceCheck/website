@@ -11,7 +11,7 @@ const { createUser, deleteUser, connectToAuth0, getUser, logoutUser, getUsersInO
 const { error } = require('console');
 var orionToken;
 
-const HOST = 'https://brycecheck.com';
+const HOST = 'https://fetchit-messaging.com';
 const API_PORT = 3001;
 const DB_API_PORT = 3002;
 const TWILIO_NUMBER = '+17245586932';

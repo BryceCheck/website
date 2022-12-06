@@ -1,7 +1,6 @@
 export const TWILIO_NUMBER = '+17245586932';
 // Endpoints and URL/I's
-export const WSS_HOST = 'wss://brycecheck.com';
-export const HOST = 'https://brycecheck.com';
+export const HOST = 'https://fetchit-messaging.com';
 export const TOKEN_ENDPOINT = '/token';
 // Message classes
 export const INBOUND_MSG = 'inbound-message';

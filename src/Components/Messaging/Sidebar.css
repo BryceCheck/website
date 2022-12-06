@@ -26,3 +26,7 @@
 .spaced {
   margin: 0 5px;
 }
+
+.sidebar-list {
+  max-height: 75vh;
+}

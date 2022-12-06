@@ -7,7 +7,7 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
 import { HOST, MAX_PHONE_NUMBER_LENGTH, MAX_QUERY_LENGTH } from "../../consts";
-    
+
 import './CustomerSelectModal.css';
 import { handleFieldChange } from "../../utils";
 
@@ -173,7 +173,7 @@ const CustomerListSelectModal = (props) => {
               </tr>
             </table>
           )
-        } else if(res.data.length !== 0) {
+        } else if(res.data.phoneClients && res.data.phoneClients.length !== 0) {
           body.push(res.data.phoneClients.map(client => {
             return <div 
               className='client-list-item' 

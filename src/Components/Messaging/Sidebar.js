@@ -70,7 +70,7 @@ function Sidebar(props) {
             </div>
           </div>
         </Card.Title>
-        <ListGroup>
+        <ListGroup className='sidebar-list'>
           {conversations.map(convo => {
             console.log('Conversation:', convo);
             return <SidebarContactListItem
